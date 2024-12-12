@@ -67,25 +67,319 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
+  # Instance parameters
+  # 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
+  # 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
+  # 1024 (1 vCPU) - Available memory values: 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB
+  # 2048 (2 vCPU) - Available memory values: Between 4GB and 16GB in 1GB increments
+  # 4096 (4 vCPU) - Available memory values: Between 8GB and 30GB in 1GB increments
+  CpuValue:
+    Type: Number
+    Default: 1024
+    Description: Fargate virtual CPU quantity 1024 equals one vCPU
+
+  MemoryAmount:
+    Type: Number
+    Default: 2048
+    Description: Fargate memory amount in MB
+
+  HealthCheckTimeout:
+    Type: Number
+    Default: 30
+    Description: Health check timeout in seconds
+
+  HealthCheckInterval:
+    Type: Number
+    Default: 30
+    Description: Health check interval in seconds
+
+  HealthyThresholdCount:
+    Type: Number
+    Default: 3
+    Description: Number of consecutive health check successes required before considering an unhealthy target healthy
+
+  UnhealthyThresholdCount:
+    Type: Number
+    Default: 3
+    Description: Number of consecutive health check failures required before considering a target unhealthy
+
+  AutoscalingThreshold:
+    Type: Number
+    Default: 75
+    Description: CPU utilization percentage to trigger autoscaling
+
+  AutoscalingCheckPeriod:
+    Type: Number
+    Default: 60
+    Description: Period in seconds to check for autoscaling
+
+  MinTasksNumber:
+    Type: Number
+    Default: 1
+    Description: Minimum number of tasks for the service
+
+  MaxTasksNumber:
+    Type: Number
+    Default: 10
+    Description: Maximum number of tasks for the service
+
+  AutoscalingDataPointN:
+    Type: Number
+    Default: 3
+    Description: Number of data points to alarm for autoscaling
+
+  AutoscalingDataPointM:
+    Type: Number
+    Default: 5
+    Description: Number of evaluation periods for autoscaling
+
+  FargateEFSFileSystemID:
+    Type: String
+    Description: EFS File System ID for Fargate
+
+  MountEfs:
+    Type: String
+    Description: Whether to mount EFS (true/false)
+
+  WireTapLogActivation:
+    Type: String
+    Description: Whether to activate wiretap logging (true/false)
+
+  ContainerImageURI:
+    Type: String
+    Description: URI of the container image
+
+  DeliveryPushMicroserviceTaskManagedPolicy:
+    Type: String
+    Description: ARN of the managed policy for the delivery push microservice task
+
+  AlbSecurityGroup:
+    Type: String
+    Description: Security group for the application load balancer
+
+  EcsLogGroup:
+    Type: String
+    Description: Log group for ECS
+
+  LogAlarmStrategy:
+    Type: String
+    Description: Log alarm strategy
+
+  StreamEventManagerLambdaName:
+    Type: String
+
+  # OpenApi Bucket params
+  MicroserviceBucketName:
+    Type: String
+    Default: ''
+    Description: 'Name of the bucket where the microservice files are copied during deploy'
+
+  DoneActionsQueueURL:
+    Type: String
+    Description: 'Send done actions to this queue read by stream'
+
+  DoneActionsQueueARN:
+    Type: String
+    Description: 'Send done actions to this queue read by stream'
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'DLQ ARN for StreamEventManagerLambda'
+
+  # CDC
+
+  CdcKinesisSourceStreamArn:
+    Type: String
+    Description: 'Where to send CDC'
+
+  CdcKinesisSourceStreamKeyArn:
+    Description: "Kinesis source CDC stream crypto key ARN"
+    Type: String
+
+
 Resources:
 
-  # PN-TemplateBeMs microservice
-  TemplateBeMsMicroservice:
+  # pn-stream microservice
+  StreamMicroservice:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
-        CpuValue: 512
-        MemoryAmount: 2GB
+        MicroServiceUniqueName: !Sub '${ProjectName}-stream'
+        CpuValue: !Ref CpuValue
+        MemoryAmount: !Ref MemoryAmount
+        HealthCheckTimeout: !Ref HealthCheckTimeout
+        HealthCheckInterval: !Ref HealthCheckInterval
+        HealthyThresholdCount: !Ref HealthyThresholdCount
+        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+        AutoscalingStrategy: CUSTOM
+        AutoscalingThreshold: !Ref AutoscalingThreshold
+        AutoscalingCheckPeriod: !Ref AutoscalingCheckPeriod
+        MinTasksNumber: !Ref MinTasksNumber
+        MaxTasksNumber: !Ref MaxTasksNumber
+        AutoscalingDataPointN: !Ref AutoscalingDataPointN
+        AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        EfsFilesystem: !Ref FargateEFSFileSystemID
+        MountEfs: !Ref MountEfs
+        WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        MappedPaths: '/template-ms-be/*'
+        JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
+        MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
+        Subnets: !Join [ ',', !Ref SubnetsIds ]
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        TaskRoleManagedPolicyArn: !Ref DeliveryPushMicroserviceTaskManagedPolicy
+        AlbSecurityGroup: !Ref AlbSecurityGroup
+        EcsLogGroup: !Ref EcsLogGroup
+        LogAlarmStrategyV1: !Ref LogAlarmStrategy
+
+  # Grant operational rights to pn-stream microservice microservice
+  PnStreamMicroserviceTaskManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement: [ ]
+
+  #########################################################
+  ###              StreamEventManagerLambda            ###
+  #########################################################
+
+  # Lambda function
+  StreamEventManagerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref StreamEventManagerLambdaName
+      Runtime: nodejs18.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/streamEventManager.zip"
+      Role: !GetAtt StreamEventManagerLambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          QUEUE_URL: !Ref DoneActionsQueueURL
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 10
+
+  # Lambda function role
+  StreamEventManagerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-streamEventManagerLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function IAM policy
+  StreamEventManagerLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-StreamEventManagerLambdaPolicy
+      Roles:
+        - !Ref StreamEventManagerLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kinesis:DescribeStream
+              - kinesis:DescribeStreamSummary
+              - kinesis:GetShardIterator
+              - kinesis:GetRecords
+              - kinesis:ListShards
+              - kinesis:ListStreams
+              - kinesis:SubscribeToShard
+            Resource: !Ref CdcKinesisSourceStreamArn
+          - Action: kms:Decrypt
+            Effect: Allow
+            Resource: !Ref CdcKinesisSourceStreamKeyArn
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource:
+              !Ref DoneActionsQueueARN
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource:
+              !Ref StreamEventManagerDLQARN
+
+
+  # CDC to Stream Event Manager
+  StreamEventManagerLambdaKinesisSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
+      BisectBatchOnFunctionError: true
+      EventSourceArn: !Ref CdcKinesisSourceStreamArn
+      FunctionName: !Ref StreamEventManagerLambda
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+      MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
+      StartingPosition: TRIM_HORIZON
+      DestinationConfig:
+        OnFailure:
+          Destination: !Ref StreamEventManagerDLQARN
+
+  StreamEventManagerLambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref StreamEventManagerLambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
+  ## Dashboard
+  StreamMicroserviceCloudWatchDashboard:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
+      Parameters:
+        ProjectName: !Sub '${ProjectName}-stream'
+        LogGroupsNames: !Join
+          - ','
+          - - !Sub '/aws/ecs/${ProjectName}-delivery-push'
+
+  #### Alarm for custom metric Autoscaling
+  AlarmCustomAutoscaling:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: !Sub "${ProjectName}-stream-autoscaling-custom"
+      AlarmDescription: "Trigger scaling based on custom metric"
+      DatapointsToAlarm: !Ref AutoscalingDataPointN
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      Metrics:
+      EvaluationPeriods: !Ref AutoscalingDataPointM
+      Threshold: 60
+      AlarmActions:
+        - !GetAtt StreamMicroservice.Outputs.ScaleUpPolicy
+      OKActions:
+        - !GetAtt StreamMicroservice.Outputs.ScaleDownPolicy
+
+Outputs:
+  #
+  Version:
+    Value: !Ref Version
