@@ -24,11 +24,70 @@ Parameters:
     Type: String
     Description: 'Where to send CDC'
 
+  AlarmSNSTopicArn:
+    Type: String
+
+  AlarmSNSTopicName:
+    Type: String
+    Description: 'Topic alarm'
+
 Resources:
-    NullResource:
-        Type: AWS::CloudFormation::WaitConditionHandle
+  DoneActionsQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-delivery_push_to_stream'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 60
+        MaxReceiveCount: 10
+        DelaySeconds: 1
+
+  # internal queues DLQ
+  WebhookEventManagerDLQ:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-stream_Webhook_DLQ'
+        DelaySeconds: 1
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        HasDLQ: "false"
+        QueueHasAlarm: "true"
 
 Outputs:
-    SampleOutput:
-      Description: A Sample Output
-      Value: 'na'
+
+  # Already Done Actions
+  DoneActionsQueueName:
+    Value: !GetAtt DoneActionsQueue.Outputs.QueueName
+    Description: pn-delivery-push actions done queue name
+  DoneActionsQueueURL:
+    Value: !GetAtt DoneActionsQueue.Outputs.QueueURL
+    Description: pn-delivery-push actions done queue URL
+  DoneActionsQueueARN:
+    Value: !GetAtt DoneActionsQueue.Outputs.QueueARN
+    Description: pn-delivery-push actions done queue ARN
+  DoneActionsQueueAlarmARN:
+    Value: !GetAtt DoneActionsQueue.Outputs.SqsDLQAlarmArn
+    Description: pn-delivery-push actions done queue dlq alarm ARN
+  DoneActionsQueueAgeAlarmARN:
+    Value: !GetAtt DoneActionsQueue.Outputs.SqsAgeAlarmArn
+    Description: pn-delivery-push actions done queue age alarm ARN
+
+  # Webhook Step Manager DLQ
+  WebhookEventManagerDLQName:
+    Value: !GetAtt WebhookEventManagerDLQ.Outputs.QueueName
+    Description: pn-delivery-push_webhook_event_manager_DLQ queue name
+  WebhookEventManagerDLQURL:
+    Value: !GetAtt WebhookEventManagerDLQ.Outputs.QueueURL
+    Description: pn-delivery-push_webhook_event_manager_DLQ queue URL
+  WebhookEventManagerDLQARN:
+    Value: !GetAtt WebhookEventManagerDLQ.Outputs.QueueARN
+    Description: pn-delivery-push_webhook_event_manager_DLQ queue ARN
+  WebhookEventManagerDLQAlarmARN:
+    Value: !GetAtt WebhookEventManagerDLQ.Outputs.SqsDLQAlarmArn
+    Description: pn-delivery-push_webhook_event_manager_DLQ alarm ARN
