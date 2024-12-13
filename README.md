@@ -1,3 +1,10 @@
-# pn-template-ms-be
 
-A template project for a new PN backend microservice 
+## Istruzioni per la compilazione
+```
+    ./mvnw clean install
+```
+
+## Istruzioni per il run
+```
+    ./mvnw spring-boot:run
+```
