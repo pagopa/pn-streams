@@ -149,9 +149,9 @@ Parameters:
     Type: String
     Description: URI of the container image
 
-  DeliveryPushMicroserviceTaskManagedPolicy:
+  StreamMicroserviceTaskManagedPolicy:
     Type: String
-    Description: ARN of the managed policy for the delivery push microservice task
+    Description: ARN of the managed policy for the stream microservice task
 
   AlbSecurityGroup:
     Type: String
@@ -181,6 +181,18 @@ Parameters:
   DoneActionsQueueARN:
     Type: String
     Description: 'Send done actions to this queue read by stream'
+
+  DoneActionsQueueAlarmARN:
+    Type: String
+    Description: stream actions queue dlq alarm ARN
+
+  DoneActionsQueueAgeAlarmARN:
+    Type: String
+    Description: stream actions queue age alarm ARN
+
+  StreamEventManagerDLQAlarmARN:
+    Type: String
+    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
 
   StreamEventManagerDLQARN:
     Type: String
@@ -232,7 +244,7 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        TaskRoleManagedPolicyArn: !Ref DeliveryPushMicroserviceTaskManagedPolicy
+        TaskRoleManagedPolicyArn: !Ref StreamMicroserviceTaskManagedPolicy
         AlbSecurityGroup: !Ref AlbSecurityGroup
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
@@ -243,7 +255,20 @@ Resources:
     Properties:
       PolicyDocument:
         Version: 2012-10-17
-        Statement: [ ]
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
+              - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref DoneActionsQueueARN
 
   #########################################################
   ###              StreamEventManagerLambda            ###
@@ -343,6 +368,9 @@ Resources:
       DestinationConfig:
         OnFailure:
           Destination: !Ref StreamEventManagerDLQARN
+      FilterCriteria:
+        Filters:
+          - Pattern: '{"tableName": ["pn-Timelines"], "eventName": ["INSERT"]}'
 
   StreamEventManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -358,10 +386,19 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
-        ProjectName: !Sub '${ProjectName}-stream'
+        DashboardName: !Sub "${ProjectName}-stream"
+        AlarmArns: !Join
+          - ','
+          - - !Ref DoneActionsQueueAlarmARN
+            - !Ref DoneActionsQueueAgeAlarmARN
+        QueueArns: !Join
+          - ','
+          - - !Ref StreamEventManagerDLQAlarmARN
+            - !Ref DoneActionsQueueARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-delivery-push'
+          - - !Sub '/aws/ecs/${ProjectName}-stream'
+            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
 
   #### Alarm for custom metric Autoscaling
   AlarmCustomAutoscaling:
