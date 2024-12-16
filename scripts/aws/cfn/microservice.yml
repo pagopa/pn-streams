@@ -149,9 +149,9 @@ Parameters:
     Type: String
     Description: URI of the container image
 
-  DeliveryPushMicroserviceTaskManagedPolicy:
+  StreamMicroserviceTaskManagedPolicy:
     Type: String
-    Description: ARN of the managed policy for the delivery push microservice task
+    Description: ARN of the managed policy for the stream microservice task
 
   AlbSecurityGroup:
     Type: String
@@ -165,7 +165,7 @@ Parameters:
     Type: String
     Description: Log alarm strategy
 
-  StreamEventManagerLambdaName:
+  NotificationStreamManagerLambdaName:
     Type: String
 
   # OpenApi Bucket params
@@ -174,17 +174,13 @@ Parameters:
     Default: ''
     Description: 'Name of the bucket where the microservice files are copied during deploy'
 
-  DoneActionsQueueURL:
+  NotificationStreamManagerDLQAlarmARN:
     Type: String
-    Description: 'Send done actions to this queue read by stream'
+    Description: 'DLQ Alarm ARN for NotificationStreamManagerLambda'
 
-  DoneActionsQueueARN:
+  NotificationStreamManagerDLQARN:
     Type: String
-    Description: 'Send done actions to this queue read by stream'
-
-  StreamEventManagerDLQARN:
-    Type: String
-    Description: 'DLQ ARN for StreamEventManagerLambda'
+    Description: 'DLQ ARN for NotificationStreamManagerLambda'
 
   # CDC
 
@@ -195,7 +191,6 @@ Parameters:
   CdcKinesisSourceStreamKeyArn:
     Description: "Kinesis source CDC stream crypto key ARN"
     Type: String
-
 
 Resources:
 
@@ -232,38 +227,37 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        TaskRoleManagedPolicyArn: !Ref DeliveryPushMicroserviceTaskManagedPolicy
+        TaskRoleManagedPolicyArn: !Ref StreamMicroserviceTaskManagedPolicy
         AlbSecurityGroup: !Ref AlbSecurityGroup
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
-  # Grant operational rights to pn-stream microservice microservice
+  # Grant operational rights to pn-stream microservice
   PnStreamMicroserviceTaskManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
         Version: 2012-10-17
-        Statement: [ ]
+        Statement: []
 
   #########################################################
-  ###              StreamEventManagerLambda            ###
+  ###         NotificationStreamManagerLambda           ###
   #########################################################
 
   # Lambda function
-  StreamEventManagerLambda:
+  NotificationStreamManagerLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Ref StreamEventManagerLambdaName
+      FunctionName: !Ref NotificationStreamManagerLambdaName
       Runtime: nodejs18.x
       Handler: "index.handler"
       Code:
         S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/streamEventManager.zip"
-      Role: !GetAtt StreamEventManagerLambdaRole.Arn
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/notificationStreamEventManager.zip"
+      Role: !GetAtt NotificationStreamManagerLambdaRole.Arn
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          QUEUE_URL: !Ref DoneActionsQueueURL
       TracingConfig:
         Mode: Active
       Layers:
@@ -271,10 +265,10 @@ Resources:
       Timeout: 10
 
   # Lambda function role
-  StreamEventManagerLambdaRole:
+  NotificationStreamManagerLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${ProjectName}-streamEventManagerLambdaRole
+      RoleName: !Sub ${ProjectName}-notificationStreamManagerLambdaRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -288,12 +282,12 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   # Lambda function IAM policy
-  StreamEventManagerLambdaPolicy:
+  NotificationStreamManagerLambdaPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub ${ProjectName}-StreamEventManagerLambdaPolicy
+      PolicyName: !Sub ${ProjectName}-notificationStreamManagerLambdaPolicy
       Roles:
-        - !Ref StreamEventManagerLambdaRole
+        - !Ref NotificationStreamManagerLambdaRole
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -317,40 +311,35 @@ Resources:
               - sqs:GetQueueUrl
               - sqs:SendMessage
             Resource:
-              !Ref DoneActionsQueueARN
-          - Effect: Allow
-            Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:SendMessage
-            Resource:
-              !Ref StreamEventManagerDLQARN
-
+              !Ref NotificationStreamManagerDLQARN
 
   # CDC to Stream Event Manager
-  StreamEventManagerLambdaKinesisSource:
+  NotificationStreamManagerLambdaKinesisSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
       BisectBatchOnFunctionError: true
       EventSourceArn: !Ref CdcKinesisSourceStreamArn
-      FunctionName: !Ref StreamEventManagerLambda
+      FunctionName: !Ref NotificationStreamManagerLambda
       FunctionResponseTypes:
         - ReportBatchItemFailures
       MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
       StartingPosition: TRIM_HORIZON
       DestinationConfig:
         OnFailure:
-          Destination: !Ref StreamEventManagerDLQARN
+          Destination: !Ref NotificationStreamManagerDLQARN
+      FilterCriteria:
+        Filters:
+          - Pattern: '{"tableName": ["pn-Notification"], "eventName": ["INSERT"]}'
 
-  StreamEventManagerLambdaAlarms:
+  NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
       Parameters:
-        FunctionName: !Ref StreamEventManagerLambda
+        FunctionName: !Ref NotificationStreamManagerLambda
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
 
   ## Dashboard
   StreamMicroserviceCloudWatchDashboard:
@@ -358,10 +347,11 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
-        ProjectName: !Sub '${ProjectName}-stream'
+        DashboardName: !Sub "${ProjectName}-stream"
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-delivery-push'
+          - - !Sub '/aws/ecs/${ProjectName}-stream'
+            - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
 
   #### Alarm for custom metric Autoscaling
   AlarmCustomAutoscaling:
