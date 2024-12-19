@@ -1,8 +1,8 @@
 package it.pagopa.pn.stream.service.impl;
 
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhookAction;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhookEventType;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhooksPool;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamAction;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamEventType;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamsPool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +16,7 @@ import java.time.Clock;
 @ExtendWith(SpringExtension.class)
 class SchedulerServiceImplTest {
 
-    private WebhooksPool webhooksPool;
+    private StreamsPool streamsPool;
 
     @Mock
     private Clock clock;
@@ -26,25 +26,25 @@ class SchedulerServiceImplTest {
     
     @BeforeEach
     void setup() {
-        webhooksPool = Mockito.mock(WebhooksPool.class);
+        streamsPool = Mockito.mock(StreamsPool.class);
         clock = Mockito.mock(Clock.class);
 
-        schedulerService = new SchedulerServiceImpl(webhooksPool);
+        schedulerService = new SchedulerServiceImpl(streamsPool);
     }
 
 
     @Test
     void testScheduleWebhookEvent() {
-        WebhookAction action = WebhookAction.builder()
+        StreamAction action = StreamAction.builder()
                 .streamId("01")
                 .eventId("02")
                 .iun("nd")
                 .delay(4)
-                .type(WebhookEventType.REGISTER_EVENT)
+                .type(StreamEventType.REGISTER_EVENT)
                 .build();
 
-        schedulerService.scheduleWebhookEvent("01", "02", 4, WebhookEventType.REGISTER_EVENT);
+        schedulerService.scheduleWebhookEvent("01", "02", 4, StreamEventType.REGISTER_EVENT);
 
-        Mockito.verify(webhooksPool, Mockito.times(1)).scheduleFutureAction(action);
+        Mockito.verify(streamsPool, Mockito.times(1)).scheduleFutureAction(action);
     }
 }

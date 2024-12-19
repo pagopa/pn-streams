@@ -1,7 +1,7 @@
 package it.pagopa.pn.stream.middleware.dao.webhook.dynamo.mapper;
 
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.RefusedReasonEntity;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.RefusedReason;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.RefusedReasonEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

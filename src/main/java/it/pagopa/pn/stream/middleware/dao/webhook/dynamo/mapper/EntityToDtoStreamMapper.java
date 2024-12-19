@@ -1,8 +1,8 @@
 package it.pagopa.pn.stream.middleware.dao.webhook.dynamo.mapper;
 
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.StreamMetadataResponseV25;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;

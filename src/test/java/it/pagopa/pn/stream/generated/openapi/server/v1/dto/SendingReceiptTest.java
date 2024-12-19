@@ -1,6 +1,5 @@
 package it.pagopa.pn.stream.generated.openapi.server.v1.dto;
 
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.SendingReceipt;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

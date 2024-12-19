@@ -1,12 +1,12 @@
 package it.pagopa.pn.stream.service.mapper;
 
 import it.pagopa.pn.stream.dto.timeline.details.TimelineElementCategoryInt;
+import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ProgressResponseElementV25;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.RefusedReasonEntity;
 import java.time.Instant;
 import java.util.List;
 
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ProgressResponseElementV25;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

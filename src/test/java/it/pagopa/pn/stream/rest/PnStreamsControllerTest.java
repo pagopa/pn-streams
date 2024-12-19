@@ -2,9 +2,10 @@ package it.pagopa.pn.stream.rest;
 
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnNotFoundException;
+import it.pagopa.pn.stream.generated.openapi.server.stream.v1.dto.*;
 import it.pagopa.pn.stream.middleware.dao.webhook.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
-import it.pagopa.pn.stream.service.WebhookStreamsService;
+import it.pagopa.pn.stream.service.StreamsService;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class PnStreamsControllerTest {
     WebTestClient webTestClient;
 
     @MockBean
-    private WebhookStreamsService service;
+    private StreamsService service;
 
     @MockBean
     private PnStreamConfigs pnStreamConfigs;

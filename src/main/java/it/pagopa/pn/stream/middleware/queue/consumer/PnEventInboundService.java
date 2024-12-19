@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.impl.WebhookActionEventType;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.impl.StreamActionEventType;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
@@ -23,7 +23,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import static it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes.*;
@@ -32,21 +31,9 @@ import static it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes.*;
 @Slf4j
 public class PnEventInboundService {
     private final EventHandler eventHandler;
-    private final String externalChannelEventQueueName;
-    private final String safeStorageEventQueueName;
-    private final String nationalRegistriesEventQueueName;
-    private final String addressManagerEventQueueName;
-    private final String validateF24EventQueueName;
-    private final String deliveryValidationEvents;
 
     public PnEventInboundService(EventHandler eventHandler, PnStreamConfigs cfg) {
         this.eventHandler = eventHandler;
-        this.externalChannelEventQueueName = cfg.getTopics().getFromExternalChannel();
-        this.safeStorageEventQueueName = cfg.getTopics().getSafeStorageEvents();
-        this.nationalRegistriesEventQueueName = cfg.getTopics().getNationalRegistriesEvents();
-        this.addressManagerEventQueueName = cfg.getTopics().getAddressManagerEvents();
-        this.validateF24EventQueueName = cfg.getTopics().getF24Events();
-        this.deliveryValidationEvents = cfg.getTopics().getDeliveryValidationEvents();
     }
 
     //Viene definita un implementazione (anonima) di MessageRoutingCallback. Nel contesto di Spring, quando viene ricevuto un messaggio da una coda gestita da Spring Cloud Stream,
@@ -94,7 +81,7 @@ public class PnEventInboundService {
 
         if (eventType != null) {
             //Se l'event type e valorizzato ...
-            if (WebhookActionEventType.WEBHOOK_ACTION_GENERIC.name().equals(eventType)) {
+            if (StreamActionEventType.WEBHOOK_ACTION_GENERIC.name().equals(eventType)) {
                 //... e si tratta di una WEBHOOK ACTION, viene gestito con l'handleWebhookAction
                 return handleWebhookAction();
             }

@@ -5,7 +5,6 @@ import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineEleme
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementDetailsV25;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementV25;
 
-
 public class TimelineElementMapper {
     private TimelineElementMapper(){}
     

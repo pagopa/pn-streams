@@ -2,11 +2,10 @@ package it.pagopa.pn.stream.middleware.dao.webhook.dynamo.mapper;
 
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
-import java.util.Set;
-
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.StreamCreationRequestV25;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.StreamRequestV25;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
+import java.util.Set;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 

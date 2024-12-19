@@ -1,12 +1,13 @@
 package it.pagopa.pn.stream.service.mapper;
 
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.RefusedReasonEntity;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.mapper.EntityToDtoRefusedReasonMapper;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.NotificationStatus;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ProgressResponseElementV25;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.RefusedReason;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementCategoryV23;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.RefusedReasonEntity;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.mapper.EntityToDtoRefusedReasonMapper;
+
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;

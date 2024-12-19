@@ -2,8 +2,8 @@ import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.timeline.details.NormalizedAddressDetailsInt;
 import it.pagopa.pn.stream.dto.timeline.details.NotHandledDetailsInt;
 import it.pagopa.pn.stream.dto.timeline.details.NotificationCancelledDetailsInt;
-import it.pagopa.pn.stream.service.mapper.SmartMapper;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementDetailsV25;
+import it.pagopa.pn.stream.service.mapper.SmartMapper;
 
 import java.util.ArrayList;
 import java.util.List;

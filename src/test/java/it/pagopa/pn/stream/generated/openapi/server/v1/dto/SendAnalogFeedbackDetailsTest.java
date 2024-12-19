@@ -1,9 +1,5 @@
 package it.pagopa.pn.stream.generated.openapi.server.v1.dto;
 
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.PhysicalAddress;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ResponseStatus;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.SendAnalogFeedbackDetailsV25;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ServiceLevel;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

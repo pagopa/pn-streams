@@ -1,7 +1,7 @@
 package it.pagopa.pn.stream.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhookAction;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.impl.WebhookActionsEventHandler;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamAction;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.impl.StreamActionsEventHandler;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,30 +22,30 @@ class ActionHandlerTest {
     private ActionHandler actionHandler;
 
     @Mock
-    private WebhookActionsEventHandler webhookActionsEventHandler;
+    private StreamActionsEventHandler streamActionsEventHandler;
 
 
     @Test
-    void pnStreamWebhookActionConsumer() {
+    void pnStreamActionConsumer() {
         //GIVEN
-        Message<WebhookAction> message = getWebhookActionMessage();
+        Message<StreamAction> message = getWebhookActionMessage();
  
         //WHEN
-        Consumer<Message<WebhookAction>> consumer = actionHandler.pnStreamWebhookActionConsumer();
+        Consumer<Message<StreamAction>> consumer = actionHandler.pnStreamActionConsumer();
         consumer.accept(message);
 
         //THEN
-        WebhookAction action = message.getPayload();
-        verify(webhookActionsEventHandler).handleEvent(action);
+        StreamAction action = message.getPayload();
+        verify(streamActionsEventHandler).handleEvent(action);
     }
 
     @NotNull
-    private static Message<WebhookAction> getWebhookActionMessage() {
+    private static Message<StreamAction> getWebhookActionMessage() {
         return new Message<>() {
             @Override
             @NotNull
-            public WebhookAction getPayload() {
-                return WebhookAction.builder()
+            public StreamAction getPayload() {
+                return StreamAction.builder()
                         .iun("test")
                         .build();
             }

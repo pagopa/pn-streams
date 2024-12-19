@@ -3,8 +3,8 @@ package it.pagopa.pn.stream.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.stream.middleware.queue.consumer.handler.utils.HandleEventUtils;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhookAction;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.impl.WebhookActionsEventHandler;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamAction;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.impl.StreamActionsEventHandler;
 import it.pagopa.pn.stream.utils.MdcKey;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
@@ -20,22 +20,22 @@ import java.util.function.Consumer;
 @AllArgsConstructor
 @CustomLog
 public class ActionHandler {
-    private final WebhookActionsEventHandler webhookActionsEventHandler;
+    private final StreamActionsEventHandler streamActionsEventHandler;
     
     @Bean
-    public Consumer<Message<WebhookAction>> pnStreamWebhookActionConsumer() {
-        final String processName = "WEBHOOK ACTION";
+    public Consumer<Message<StreamAction>> pnStreamActionConsumer() {
+        final String processName = "STREAM ACTION";
         
         return message -> {
             try {
-                MDC.put(MDCUtils.MDC_PN_CTX_TOPIC, MdcKey.WEBHOOK_KEY);
+                MDC.put(MDCUtils.MDC_PN_CTX_TOPIC, MdcKey.STREAM_KEY);
 
-                log.debug("Handle action pnStreamWebhookActionConsumer, with content {}", message);log.debug("pnStreamWebhookActionConsumer, message={}", message);
-                WebhookAction action = message.getPayload();
+                log.debug("Handle action pnStreamActionConsumer, with content {}", message);log.debug("pnStreamActionConsumer, message={}", message);
+                StreamAction action = message.getPayload();
                 HandleEventUtils.addIunToMdc(action.getIun());
 
                 log.logStartingProcess(processName);
-                webhookActionsEventHandler.handleEvent(action);
+                streamActionsEventHandler.handleEvent(action);
                 log.logEndingProcess(processName);
 
                 MDC.remove(MDCUtils.MDC_PN_CTX_TOPIC);

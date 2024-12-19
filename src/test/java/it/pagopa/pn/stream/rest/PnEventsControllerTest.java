@@ -1,7 +1,8 @@
 package it.pagopa.pn.stream.rest;
 
-import it.pagopa.pn.stream.dto.webhook.ProgressResponseElementDto;
-import it.pagopa.pn.stream.service.WebhookEventsService;
+import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
+import it.pagopa.pn.stream.generated.openapi.server.stream.v1.dto.*;
+import it.pagopa.pn.stream.service.StreamEventsService;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +29,7 @@ class PnEventsControllerTest {
     WebTestClient webTestClient;
 
     @MockBean
-    private WebhookEventsService service;
+    private StreamEventsService service;
 
     @Test
     @Disabled

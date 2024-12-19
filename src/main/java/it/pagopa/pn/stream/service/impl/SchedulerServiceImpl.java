@@ -1,8 +1,8 @@
 package it.pagopa.pn.stream.service.impl;
 
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhookAction;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhookEventType;
-import it.pagopa.pn.stream.middleware.queue.producer.abstractions.webhookspool.WebhooksPool;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamAction;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamEventType;
+import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamsPool;
 import it.pagopa.pn.stream.service.SchedulerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 @Slf4j
 public class SchedulerServiceImpl implements SchedulerService {
-    private final WebhooksPool webhooksPool;
+    private final StreamsPool streamsPool;
     
     @Override
-    public void scheduleWebhookEvent(String streamId, String eventId, Integer delay, WebhookEventType actionType) {
-        WebhookAction action = WebhookAction.builder()
+    public void scheduleWebhookEvent(String streamId, String eventId, Integer delay, StreamEventType actionType) {
+        StreamAction action = StreamAction.builder()
                 .streamId(streamId)
                 .eventId(eventId)
                 .iun("nd")
@@ -24,6 +24,6 @@ public class SchedulerServiceImpl implements SchedulerService {
                 .type(actionType)
                 .build();
 
-        this.webhooksPool.scheduleFutureAction(action);
+        this.streamsPool.scheduleFutureAction(action);
     }
 }

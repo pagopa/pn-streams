@@ -1,6 +1,5 @@
 package it.pagopa.pn.stream.generated.openapi.server.v1.dto;
 
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.AarGenerationDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
