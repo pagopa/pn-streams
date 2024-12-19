@@ -1,6 +1,5 @@
 echo "### CREATE STREAM COMPONENT ###"
 
-## bash <(curl -s https://raw.githubusercontent.com/TODO:PATH_PN-STREAM/init.sh)
+bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-stream/bb53e4067035e24c60b54870c3fa670d98a6449f/src/test/resources/testcontainers/init.sh)
 
-## TODO: per eventulai test di integrazione che si collegano con il container, aggiungere path alle risorse definite nel file init.sh
 

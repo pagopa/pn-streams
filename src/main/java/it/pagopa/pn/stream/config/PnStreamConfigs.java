@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.util.List;
 
 @Configuration
-@ConfigurationProperties( prefix = "pn.delivery-push")
+@ConfigurationProperties( prefix = "pn.stream")
 @Data
 @Import({SharedAutoConfiguration.class})
 public class PnStreamConfigs {
