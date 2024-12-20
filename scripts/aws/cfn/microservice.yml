@@ -11,14 +11,6 @@ Parameters:
     Type: String
     Description: ARN of alarm topic
 
-  WebApiDnsName:
-    Type: String
-    Description: 'The DNS name used for WEB rest API.'
-  
-  CorsAllowedDomains:
-    Type: String
-    Description: 'Comma separated list of domains allowed to make cross origin request'
-
   ContainerImageUri:
     Type: String
     Description: 'Exact container image URI with full repository and image digest'
@@ -36,7 +28,7 @@ Parameters:
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
 
   SubnetsIds:
-    Type: String
+    Type: CommaDelimitedList
     Description: 'subnets ids comma separated list. Where to deploy the microservice'
 
   VpcId:
@@ -165,7 +157,17 @@ Parameters:
     Type: String
     Description: Log alarm strategy
 
-  StreamEventManagerLambdaName:
+  ConsumedQueueMessagePerMinute:
+    Type: Number
+    Default: 0
+    Description: Weight to assign to queue number of visible messages metric
+
+  ApplicationLoadBalancerMetricsDimensionName:
+    Type: String
+    Default: ''
+    Description: Application load balancer dimension name
+
+  NotificationStreamManagerLambdaName:
     Type: String
 
   # OpenApi Bucket params
@@ -174,13 +176,19 @@ Parameters:
     Default: ''
     Description: 'Name of the bucket where the microservice files are copied during deploy'
 
-  DoneActionsQueueURL:
+  
+  MicroserviceBucketBaseKey:
     Type: String
-    Description: 'Send done actions to this queue read by stream'
+    Default: ''
+    Description: 'Base key of the microservice in the s3 bucket'
 
-  DoneActionsQueueARN:
+  NotificationStreamManagerDLQAlarmARN:
     Type: String
-    Description: 'Send done actions to this queue read by stream'
+    Description: 'DLQ Alarm ARN for NotificationStreamManagerLambda'
+
+  NotificationStreamManagerDLQARN:
+    Type: String
+    Description: 'DLQ ARN for NotificationStreamManagerLambda'
 
   DoneActionsQueueAlarmARN:
     Type: String
@@ -190,6 +198,14 @@ Parameters:
     Type: String
     Description: stream actions queue age alarm ARN
 
+  DoneActionsQueueName:
+    Type: String
+    Description: actions queue name
+
+  DoneActionsQueueARN:
+    Type: String
+    Description: actions queue ARN
+
   StreamEventManagerDLQAlarmARN:
     Type: String
     Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
@@ -197,6 +213,20 @@ Parameters:
   StreamEventManagerDLQARN:
     Type: String
     Description: 'DLQ ARN for StreamEventManagerLambda'
+
+  StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
+    Type: Number
+    Default: 20
+    Description: Batching window size for lambda triggering
+
+  StreamEventManagerLambdaBatchSize:
+    Type: Number
+    Default: 60
+    Description: Batch size for lambda triggering
+
+  StreamEventManagerLambdaName:
+    Type: String
+    Default: Name of Event Manager Lambda
 
   # CDC
 
@@ -207,7 +237,6 @@ Parameters:
   CdcKinesisSourceStreamKeyArn:
     Description: "Kinesis source CDC stream crypto key ARN"
     Type: String
-
 
 Resources:
 
@@ -249,7 +278,7 @@ Resources:
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
-  # Grant operational rights to pn-stream microservice microservice
+  # Grant operational rights to pn-stream microservice
   PnStreamMicroserviceTaskManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -267,28 +296,26 @@ Resources:
               - sqs:ReceiveMessage
               - sqs:SendMessage
               - sqs:SendMessageBatch
-            Resource:
-              - !Ref DoneActionsQueueARN
+            Resource: !Ref DoneActionsQueueARN
 
   #########################################################
-  ###              StreamEventManagerLambda            ###
+  ###         NotificationStreamManagerLambda           ###
   #########################################################
 
   # Lambda function
-  StreamEventManagerLambda:
+  NotificationStreamManagerLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Ref StreamEventManagerLambdaName
+      FunctionName: !Ref NotificationStreamManagerLambdaName
       Runtime: nodejs18.x
       Handler: "index.handler"
       Code:
         S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/streamEventManager.zip"
-      Role: !GetAtt StreamEventManagerLambdaRole.Arn
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/notificationStreamEventManager.zip"
+      Role: !GetAtt NotificationStreamManagerLambdaRole.Arn
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          QUEUE_URL: !Ref DoneActionsQueueURL
       TracingConfig:
         Mode: Active
       Layers:
@@ -296,10 +323,10 @@ Resources:
       Timeout: 10
 
   # Lambda function role
-  StreamEventManagerLambdaRole:
+  NotificationStreamManagerLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${ProjectName}-streamEventManagerLambdaRole
+      RoleName: !Sub ${ProjectName}-notificationStreamManagerLambdaRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -313,12 +340,12 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
   # Lambda function IAM policy
-  StreamEventManagerLambdaPolicy:
+  NotificationStreamManagerLambdaPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub ${ProjectName}-StreamEventManagerLambdaPolicy
+      PolicyName: !Sub ${ProjectName}-notificationStreamManagerLambdaPolicy
       Roles:
-        - !Ref StreamEventManagerLambdaRole
+        - !Ref NotificationStreamManagerLambdaRole
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -342,43 +369,35 @@ Resources:
               - sqs:GetQueueUrl
               - sqs:SendMessage
             Resource:
-              !Ref DoneActionsQueueARN
-          - Effect: Allow
-            Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:SendMessage
-            Resource:
-              !Ref StreamEventManagerDLQARN
-
+              !Ref NotificationStreamManagerDLQARN
 
   # CDC to Stream Event Manager
-  StreamEventManagerLambdaKinesisSource:
+  NotificationStreamManagerLambdaKinesisSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
       BisectBatchOnFunctionError: true
       EventSourceArn: !Ref CdcKinesisSourceStreamArn
-      FunctionName: !Ref StreamEventManagerLambda
+      FunctionName: !Ref NotificationStreamManagerLambda
       FunctionResponseTypes:
         - ReportBatchItemFailures
       MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
       StartingPosition: TRIM_HORIZON
       DestinationConfig:
         OnFailure:
-          Destination: !Ref StreamEventManagerDLQARN
+          Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: '{"tableName": ["pn-Timelines"], "eventName": ["INSERT"]}'
+          - Pattern: '{"tableName": ["pn-Notification"], "eventName": ["INSERT"]}'
 
-  StreamEventManagerLambdaAlarms:
+  NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
       Parameters:
-        FunctionName: !Ref StreamEventManagerLambda
+        FunctionName: !Ref NotificationStreamManagerLambda
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
 
   ## Dashboard
   StreamMicroserviceCloudWatchDashboard:
@@ -399,6 +418,7 @@ Resources:
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
             - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
+            - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
 
   #### Alarm for custom metric Autoscaling
   AlarmCustomAutoscaling:
@@ -409,6 +429,52 @@ Resources:
       DatapointsToAlarm: !Ref AutoscalingDataPointN
       ComparisonOperator: "GreaterThanOrEqualToThreshold"
       Metrics:
+        - Id: m1
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "DoneActionsQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
+        - Id: m4
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: TargetGroup
+                  Value: !GetAtt StreamMicroservice.Outputs.TargetGroupName
+              Namespace: "AWS/ApplicationELB"
+              MetricName: "RequestCountPerTarget"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Sum
+          ReturnData: False
+        - Id: m5
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: TargetGroup
+                  Value: !GetAtt StreamMicroservice.Outputs.TargetGroupName
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+              Namespace: "AWS/ApplicationELB"
+              MetricName: "HealthyHostCount"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
+        - Id: code
+          Expression: !Sub "IF(m5==0, 101, (100 * m1) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Label: !Sub "${ProjectName}-stream-event-queue-custom-metric"
+          ReturnData: False
+        - Id: http
+          Expression: !Sub "(100 * m4) / ${AutoscalingThreshold}"
+          Label: !Sub "${ProjectName}-stream-http-custom-metric"
+          ReturnData: False
+        - Id: e1
+          Expression: "IF( code<http, http, code )"
+          Label: !Sub "${ProjectName}-stream-autoscale-custom-metric"
       EvaluationPeriods: !Ref AutoscalingDataPointM
       Threshold: 60
       AlarmActions:
