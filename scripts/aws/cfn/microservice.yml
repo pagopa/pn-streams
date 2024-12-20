@@ -182,6 +182,22 @@ Parameters:
     Type: String
     Description: 'DLQ ARN for NotificationStreamManagerLambda'
 
+  DoneActionsQueueAlarmARN:
+    Type: String
+    Description: stream actions queue dlq alarm ARN
+
+  DoneActionsQueueAgeAlarmARN:
+    Type: String
+    Description: stream actions queue age alarm ARN
+
+  StreamEventManagerDLQAlarmARN:
+    Type: String
+    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'DLQ ARN for StreamEventManagerLambda'
+
   # CDC
 
   CdcKinesisSourceStreamArn:
@@ -238,7 +254,20 @@ Resources:
     Properties:
       PolicyDocument:
         Version: 2012-10-17
-        Statement: []
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
+              - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref DoneActionsQueueARN
 
   #########################################################
   ###         NotificationStreamManagerLambda           ###
@@ -348,9 +377,18 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
         DashboardName: !Sub "${ProjectName}-stream"
+        AlarmArns: !Join
+          - ','
+          - - !Ref DoneActionsQueueAlarmARN
+            - !Ref DoneActionsQueueAgeAlarmARN
+        QueueArns: !Join
+          - ','
+          - - !Ref StreamEventManagerDLQAlarmARN
+            - !Ref DoneActionsQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
+            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
 
   #### Alarm for custom metric Autoscaling
