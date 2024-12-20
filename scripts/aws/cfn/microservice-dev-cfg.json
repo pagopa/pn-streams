@@ -1,3 +1,6 @@
 {
-  "Parameters" : {}
+  "Parameters" : {
+    "StreamEventManagerLambdaMaximumBatchingWindowInSeconds": "20",
+    "StreamEventManagerLambdaBatchSize": "60"
+  }
 }

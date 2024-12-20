@@ -38,28 +38,28 @@ Parameters:
 Resources:
 
   NotificationStreamManagerLambdaLogGroup:
-  Type: AWS::CloudFormation::Stack
-  UpdateReplacePolicy: Retain
-  DeletionPolicy: Retain
-  Properties:
-    TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
-    Parameters:
-      LogGroupName: !Sub ${ProjectName}-notificationStreamManagerLambda
-      LogGroupRetention: !Ref LogRetention
-      LogGroupPrefix: /aws/lambda
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
+      Parameters:
+        LogGroupName: !Sub ${ProjectName}-notificationStreamManagerLambda
+        LogGroupRetention: !Ref LogRetention
+        LogGroupPrefix: /aws/lambda
 
   DoneActionsQueue:
-  Type: AWS::CloudFormation::Stack
-  UpdateReplacePolicy: Retain
-  DeletionPolicy: Retain
-  Properties:
-    TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
-    Parameters:
-      QueueName: !Sub '${ProjectName}-delivery_push_to_stream'
-      AlarmSNSTopicName: !Ref AlarmSNSTopicName
-      VisibilityTimeout: 60
-      MaxReceiveCount: 10
-      DelaySeconds: 1
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-delivery_push_to_stream'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 60
+        MaxReceiveCount: 10
+        DelaySeconds: 1
 
   # internal queues DLQ
   WebhookEventManagerDLQ:
