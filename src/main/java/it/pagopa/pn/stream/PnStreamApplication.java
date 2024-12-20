@@ -9,19 +9,19 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 public class PnStreamApplication {
 
-	public static void main(String[] args) {
-		SpringApplication app = new SpringApplication(PnStreamApplication.class);
-		app.addListeners(new TaskIdApplicationListener());
-		app.run(args);
-	}
+    public static void main(String[] args) {
+        SpringApplication app = new SpringApplication(PnStreamApplication.class);
+        app.addListeners(new TaskIdApplicationListener());
+        app.run(args);
+    }
 
-	@RestController
-	public static class HomeController {
+    @RestController
+    public static class HomeController {
 
-		@GetMapping("")
-		public String home() {
-			return "Sono Vivo";
-		}
-	}
+        @GetMapping("")
+        public String home() {
+            return "Sono Vivo";
+        }
+    }
 
 }

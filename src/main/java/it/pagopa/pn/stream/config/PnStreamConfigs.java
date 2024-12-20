@@ -25,6 +25,8 @@ public class PnStreamConfigs {
 
     private WebhookDao webhookDao;
 
+    private Dao dao;
+
     private TimelinecounterDao timelinecounterDao;
 
     private List<String> listCategoriesPa;
@@ -65,6 +67,10 @@ public class PnStreamConfigs {
         private String currentVersion;
     }
 
+    @Data
+    public static class Dao {
+        private String webhookNotificationTable;
+    }
 
     @Data
     public static class WebhookDao {

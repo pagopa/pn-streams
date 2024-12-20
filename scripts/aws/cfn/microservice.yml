@@ -141,10 +141,6 @@ Parameters:
     Type: String
     Description: URI of the container image
 
-  StreamMicroserviceTaskManagedPolicy:
-    Type: String
-    Description: ARN of the managed policy for the stream microservice task
-
   AlbSecurityGroup:
     Type: String
     Description: Security group for the application load balancer
@@ -176,7 +172,7 @@ Parameters:
     Default: ''
     Description: 'Name of the bucket where the microservice files are copied during deploy'
 
-  
+
   MicroserviceBucketBaseKey:
     Type: String
     Default: ''
@@ -238,6 +234,18 @@ Parameters:
     Description: "Kinesis source CDC stream crypto key ARN"
     Type: String
 
+  WebhookNotificationTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing webhook notifications'
+
+  WebhookNotificationTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing webhook notifications'
+
+  PnNotificationTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing notifications'
+
 Resources:
 
   # pn-stream microservice
@@ -265,6 +273,7 @@ Resources:
         MountEfs: !Ref MountEfs
         WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
+        ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_WEBHOOKNOTIFICATIONTABLE=${WebhookNotificationTableName}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName
@@ -279,12 +288,19 @@ Resources:
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
   # Grant operational rights to pn-stream microservice
-  PnStreamMicroserviceTaskManagedPolicy:
+  StreamMicroserviceTaskManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+            Resource:
+              - !Sub "${WebhookNotificationTableArn}"
+              - !Sub "${WebhookNotificationTableArn}/*"
           - Effect: Allow
             Action:
               - sqs:ChangeMessageVisibility
@@ -388,7 +404,7 @@ Resources:
           Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: '{"tableName": ["pn-Notification"], "eventName": ["INSERT"]}'
+          - Pattern: !Sub '{"tableName": [${PnNotificationTableName}], "eventName": ["INSERT"]}'
 
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -419,6 +435,9 @@ Resources:
           - - !Sub '/aws/ecs/${ProjectName}-stream'
             - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref WebhookNotificationTableName
 
   #### Alarm for custom metric Autoscaling
   AlarmCustomAutoscaling:
