@@ -242,6 +242,10 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing webhook notifications'
 
+  PnNotificationTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing notifications'
+
 Resources:
 
   # pn-stream microservice
@@ -400,7 +404,7 @@ Resources:
           Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: '{"tableName": ["pn-Notification"], "eventName": ["INSERT"]}'
+          - Pattern: !Sub '{"tableName": [${PnNotificationTableName}], "eventName": ["INSERT"]}'
 
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
