@@ -113,7 +113,7 @@ public class PnEventInboundService {
 
     @NotNull
     private String handleWebhookAction() {
-        return "pnStreamWebhookActionConsumer";
+        return "pnStreamActionConsumer";
     }
 
     private String handleGenericAction(Message<?> message) {

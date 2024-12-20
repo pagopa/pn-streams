@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "pn.delivery-push.event")
+@ConfigurationProperties(prefix = "pn.stream.event")
 public class EventHandler {
     private Map<String, String> handler;
 }
