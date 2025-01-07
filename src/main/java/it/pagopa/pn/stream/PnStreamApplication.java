@@ -1,27 +1,27 @@
 package it.pagopa.pn.stream;
 
+import it.pagopa.pn.commons.configs.listeners.TaskIdApplicationListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 public class PnStreamApplication {
 
-
     public static void main(String[] args) {
-        SpringApplication.run(PnStreamApplication.class, args);
+        SpringApplication app = new SpringApplication(PnStreamApplication.class);
+        app.addListeners(new TaskIdApplicationListener());
+        app.run(args);
     }
-
 
     @RestController
-    @RequestMapping("/")
-    public static class RootController {
+    public static class HomeController {
 
-        @GetMapping("/")
+        @GetMapping("")
         public String home() {
-            return "";
+            return "Sono Vivo";
         }
     }
+
 }
