@@ -5,23 +5,24 @@ import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.dto.ext.delivery.notification.NotificationInt;
 import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
-import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
-import it.pagopa.pn.stream.dto.timeline.details.TimelineElementCategoryInt;
 import it.pagopa.pn.stream.dto.stream.EventTimelineInternalDto;
 import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
+import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
+import it.pagopa.pn.stream.dto.timeline.details.TimelineElementCategoryInt;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementV25;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ProgressResponseElementV25;
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.StreamCreationRequestV25;
+import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementV25;
 import it.pagopa.pn.stream.middleware.dao.webhook.EventEntityDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.WebhookStreamRetryAfter;
 import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamEventType;
 import it.pagopa.pn.stream.service.ConfidentialInformationService;
 import it.pagopa.pn.stream.service.SchedulerService;
-import it.pagopa.pn.stream.service.TimelineService;
 import it.pagopa.pn.stream.service.StreamEventsService;
+import it.pagopa.pn.stream.service.TimelineService;
 import it.pagopa.pn.stream.service.mapper.ProgressResponseElementMapper;
 import it.pagopa.pn.stream.service.mapper.TimelineElementStreamMapper;
 import it.pagopa.pn.stream.service.utils.StreamUtils;
@@ -33,6 +34,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -97,6 +99,13 @@ public class StreamEventsServiceImpl extends StreamServiceImpl implements Stream
                             .map(eventList -> {
                                 var retryAfter = pnStreamConfigs.getWebhook().getScheduleInterval().intValue();
                                 int currentRetryAfter = res.getLastEventIdRead() == null ? retryAfter : 0;
+                                if (eventList.isEmpty()) {
+                                    WebhookStreamRetryAfter retryAfterEntity = new WebhookStreamRetryAfter();
+                                    retryAfterEntity.setPaId(xPagopaPnCxId);
+                                    retryAfterEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+streamId);
+                                    retryAfterEntity.setRetryAfter(Instant.now().plusSeconds(pnStreamConfigs.getRetryAfterDelay()));
+                                    streamEntityDao.updateStreamRetryAfter(retryAfterEntity);
+                                }
                                 var purgeDeletionWaittime = pnStreamConfigs.getWebhook().getPurgeDeletionWaittime();
                                 log.info("consumeEventStream lastEventId={} streamId={} size={} returnedlastEventId={} retryAfter={}", lastEventId, streamId, eventList.size(), (!eventList.isEmpty()?eventList.get(eventList.size()-1).getEventId():"ND"), currentRetryAfter);
                                 // schedulo la pulizia per gli eventi precedenti a quello richiesto

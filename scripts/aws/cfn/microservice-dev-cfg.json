@@ -2,6 +2,7 @@
   "Parameters" : {
     "StreamEventManagerLambdaMaximumBatchingWindowInSeconds": "20",
     "StreamEventManagerLambdaBatchSize": "60",
-    "PnNotificationTableName": "pn-Notification"
+    "WebhookNotificationTableName": "pn-Notification",
+    "RetryAfterDelay": 300
   }
 }

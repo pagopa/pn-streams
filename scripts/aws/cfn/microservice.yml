@@ -246,6 +246,11 @@ Parameters:
     Type: String
     Description: 'Name of dynamodb table containing notifications'
 
+  RetryAfterDelay:
+    Type: Number
+    Default: 300
+    Description: 'Retry after delay expressed in seconds'
+
 Resources:
 
   # pn-stream microservice
@@ -274,6 +279,7 @@ Resources:
         WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_WEBHOOKNOTIFICATIONTABLE=${WebhookNotificationTableName}'
+        ContainerEnvEntry2: !Sub 'PN_STREAM_RETRYAFTERDELAY=${RetryAfterDelay}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName

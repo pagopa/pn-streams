@@ -6,6 +6,7 @@ import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.TimelineCounterEntityDao;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.TimelineDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.WebhookStreamRetryAfter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,9 +17,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.util.function.Tuple2;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -52,10 +55,12 @@ class StreamEntityDaoDynamoTestIT {
 
     TestDao<StreamEntity> testDao;
 
-    @BeforeEach
-    void setup( @Value("${pn.delivery-push.webhook-dao.streams-table-name}") String table) {
-        testDao = new TestDao<>(dynamoDbEnhancedAsyncClient, table, StreamEntity.class);
+    TestDao<WebhookStreamRetryAfter> testDaoRetry;
 
+    @BeforeEach
+    void setup( @Value("${pn.stream.webhook-dao.streams-table-name}") String table) {
+        testDao = new TestDao<>(dynamoDbEnhancedAsyncClient, table, StreamEntity.class);
+        testDaoRetry = new TestDao<>(dynamoDbEnhancedAsyncClient, table, WebhookStreamRetryAfter.class);
     }
 
     @Test
@@ -145,6 +150,50 @@ class StreamEntityDaoDynamoTestIT {
         } finally {
             try {
                 testDao.delete(ae.getPaId(), ae.getStreamId());
+            } catch (Exception e) {
+                System.out.println("Nothing to remove");
+            }
+        }
+    }
+
+    @Test
+    void getWithRetryAfter() {
+        //Given
+        String streamId = UUID.randomUUID().toString();
+        StreamEntity ae = newStream(streamId);
+
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(ae.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+ae.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        try {
+            testDao.delete(ae.getPaId(), ae.getStreamId());
+            testDao.delete(ae.getPaId(), WebhookStreamRetryAfter.RETRY_PREFIX+ae.getStreamId());
+
+            daoDynamo.save(ae).block(d);
+            daoDynamo.updateStreamRetryAfter(retryEntity);
+        } catch (Exception e) {
+            System.out.println("Nothing to remove");
+        }
+
+        //When
+        Tuple2<StreamEntity, WebhookStreamRetryAfter> res = daoDynamo.getWithRetryAfter(ae.getPaId(), ae.getStreamId()).block(d);
+
+        //Then
+        try {
+            StreamEntity elementFromDb = testDao.get(ae.getPaId(), ae.getStreamId());
+            WebhookStreamRetryAfter elementRetryFromDb = testDaoRetry.get(ae.getPaId(), WebhookStreamRetryAfter.RETRY_PREFIX+ae.getStreamId());
+
+            assert res != null;
+            Assertions.assertEquals( elementFromDb, res.getT1());
+            Assertions.assertEquals( elementRetryFromDb, res.getT2());
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            try {
+                testDao.delete(ae.getPaId(), ae.getStreamId());
+                testDao.delete(ae.getPaId(), WebhookStreamRetryAfter.RETRY_PREFIX+ae.getStreamId());
             } catch (Exception e) {
                 System.out.println("Nothing to remove");
             }

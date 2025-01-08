@@ -41,6 +41,8 @@ public class PnStreamConfigs {
 
     private TimelineDao timelineDao;
 
+    private int retryAfterDelay;
+
     @Data
     public static class TimelineDao {
         private String tableName;

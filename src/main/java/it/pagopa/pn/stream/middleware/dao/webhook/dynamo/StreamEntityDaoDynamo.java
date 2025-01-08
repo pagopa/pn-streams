@@ -8,23 +8,21 @@ import it.pagopa.pn.stream.middleware.dao.webhook.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.WebhookStreamRetryAfter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactUpdateItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
@@ -36,15 +34,15 @@ import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 @Slf4j
 public class StreamEntityDaoDynamo implements StreamEntityDao {
 
-
     private final DynamoDbAsyncTable<StreamEntity> table;
+    private final DynamoDbAsyncTable<WebhookStreamRetryAfter> tableRetry;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient;
-
     private final PnStreamConfigs pnStreamConfigs;
 
     public StreamEntityDaoDynamo(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, DynamoDbAsyncClient dynamoDbAsyncClient, PnStreamConfigs cfg) {
        this.table = dynamoDbEnhancedClient.table(cfg.getWebhookDao().getStreamsTableName(), TableSchema.fromBean(StreamEntity.class));
+       this.tableRetry = dynamoDbEnhancedClient.table(cfg.getWebhookDao().getStreamsTableName(), TableSchema.fromBean(WebhookStreamRetryAfter.class));
        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
        this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
        this.pnStreamConfigs = cfg;
@@ -63,6 +61,39 @@ public class StreamEntityDaoDynamo implements StreamEntityDao {
         log.info("get paId={} streamId={}", paId, streamId);
         Key hashKey = Key.builder().partitionValue(paId).sortValue(streamId).build();
         return Mono.fromFuture(table.getItem(hashKey));
+    }
+
+    @Override
+    public Mono<Tuple2<StreamEntity, WebhookStreamRetryAfter>> getWithRetryAfter(String paId, String streamId) {
+        log.info("getWithRetryAfter paId={} streamId={}", paId, streamId);
+        Key hashKey = Key.builder().partitionValue(paId).sortValue(streamId).build();
+        Key retryHashKey = Key.builder().partitionValue(paId).sortValue(WebhookStreamRetryAfter.RETRY_PREFIX+streamId).build();
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(paId);
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+streamId);
+        retryEntity.setRetryAfter(Instant.now());
+
+        ReadBatch streamEntityBatch = ReadBatch.builder(StreamEntity.class)
+                .mappedTableResource(table)
+                .addGetItem(hashKey)
+                .build();
+        ReadBatch streamRetryEntityBatch = ReadBatch.builder(WebhookStreamRetryAfter.class)
+                .mappedTableResource(tableRetry)
+                .addGetItem(retryHashKey)
+                .build();
+
+        Mono<BatchGetResultPage> deferred = Mono.defer(() ->
+                Mono.from(dynamoDbEnhancedClient.batchGetItem(BatchGetItemEnhancedRequest.builder()
+                        .readBatches(streamEntityBatch, streamRetryEntityBatch)
+                        .build())));
+
+        return deferred.flatMap(pages -> {
+            List<StreamEntity> streamEntities = new ArrayList<>(pages.resultsForTable(table));
+            List<WebhookStreamRetryAfter> streamRetryEntities = new ArrayList<>(pages.resultsForTable(tableRetry));
+            return Mono.just(Tuples.of(
+                    streamEntities.stream().filter(entity -> entity.getActivationDate() != null).toList().get(0),
+                    streamRetryEntities.stream().filter(entity -> entity.getRetryAfter() != null).findFirst().orElse(retryEntity)));
+        });
     }
 
     @Override
@@ -147,6 +178,12 @@ public class StreamEntityDaoDynamo implements StreamEntityDao {
     @Override
     public Mono<StreamEntity> disable(StreamEntity entity) {
         return update(disableStream(entity));
+    }
+
+    @Override
+    public void updateStreamRetryAfter(WebhookStreamRetryAfter entity) {
+        log.info("updateStreamRetryAfter entity={}", entity);
+        tableRetry.putItem(entity);
     }
 
     private StreamEntity disableStream(StreamEntity streamEntity){

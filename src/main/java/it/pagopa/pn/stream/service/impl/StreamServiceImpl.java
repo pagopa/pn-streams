@@ -1,20 +1,15 @@
 package it.pagopa.pn.stream.service.impl;
 
-import static it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes.ERROR_CODE_STREAM_STREAMNOTFOUND;
-
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnNotFoundException;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
+import it.pagopa.pn.stream.exceptions.PnWebhookTooManyRequestException;
 import it.pagopa.pn.stream.middleware.dao.webhook.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.service.utils.StreamUtils;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Predicate;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -22,6 +17,14 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.helpers.MessageFormatter;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Predicate;
+
+import static it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes.ERROR_CODE_STREAM_STREAMNOTFOUND;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -49,7 +52,15 @@ public abstract class StreamServiceImpl {
     }
     private Mono<StreamEntity> filterEntity(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId, StreamEntityAccessMode mode, boolean ignoreVersion) {
         final String apiV10 = pnStreamConfigs.getWebhook().getFirstVersion();
-        return streamEntityDao.get(xPagopaPnCxId,streamId.toString())
+        return streamEntityDao.getWithRetryAfter(xPagopaPnCxId, streamId.toString())
+            .map(tuple -> {
+                if (Instant.now().isAfter(tuple.getT2().getRetryAfter())) {
+                    return tuple;
+                } else {
+                    throw new PnWebhookTooManyRequestException("Pa " + xPagopaPnCxId + " version " + apiVersion(xPagopaPnApiVersion)+ " is trying to access streamId " + streamId +": retry after not expired");
+                }
+            })
+            .map(Tuple2::getT1)
             .switchIfEmpty(Mono.error(
                 new PnNotFoundException("Not found"
                     , String.format("Stream %s non found for Pa %s",streamId.toString(),xPagopaPnCxId)

@@ -11,6 +11,7 @@ import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.StreamMetadat
 import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.StreamRequestV25;
 import it.pagopa.pn.stream.middleware.dao.webhook.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.WebhookStreamRetryAfter;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.mapper.DtoToEntityStreamMapper;
 import it.pagopa.pn.stream.middleware.externalclient.pnclient.externalregistry.PnExternalRegistryClient;
 import it.pagopa.pn.stream.service.SchedulerService;
@@ -24,6 +25,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -335,7 +337,12 @@ class StreamsServiceImplTest {
         newEntity.setStreamId(UUID.randomUUID().toString());
         newEntity.setEventType(StreamRequestV25.EventTypeEnum.STATUS.name());
 
-        Mockito.when(streamEntityDao.get(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(replacedEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(replacedEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+replacedEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(Tuples.of(replacedEntity, retryEntity)));
         Mockito.when(streamEntityDao.replaceEntity(Mockito.any(), Mockito.any() )).thenReturn(Mono.just(newEntity));
 
         //WHEN
@@ -370,7 +377,12 @@ class StreamsServiceImplTest {
         newEntity.setStreamId(UUID.randomUUID().toString());
         newEntity.setEventType(StreamRequestV25.EventTypeEnum.STATUS.name());
 
-        Mockito.when(streamEntityDao.get(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(replacedEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(replacedEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+replacedEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(Tuples.of(replacedEntity, retryEntity)));
         Mockito.when(streamEntityDao.replaceEntity(Mockito.any(), Mockito.any() )).thenReturn(Mono.just(newEntity));
 
         //WHEN
@@ -404,7 +416,12 @@ class StreamsServiceImplTest {
         newEntity.setStreamId(UUID.randomUUID().toString());
         newEntity.setEventType(StreamMetadataResponseV25.EventTypeEnum.STATUS.name());
 
-        Mockito.when(streamEntityDao.get(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(replacedEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(replacedEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+replacedEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(Tuples.of(replacedEntity, retryEntity)));
         Mockito.when(streamEntityDao.replaceEntity(Mockito.any(), Mockito.any() )).thenReturn(Mono.just(newEntity));
 
         //WHEN
@@ -436,7 +453,12 @@ class StreamsServiceImplTest {
         newEntity.setStreamId(UUID.randomUUID().toString());
         newEntity.setEventType(StreamRequestV25.EventTypeEnum.STATUS.name());
 
-        Mockito.when(streamEntityDao.get(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(replacedEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(replacedEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+replacedEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(Tuples.of(replacedEntity, retryEntity)));
         Mockito.when(streamEntityDao.replaceEntity(Mockito.any(), Mockito.any() )).thenReturn(Mono.just(newEntity));
 
         //WHEN
@@ -526,7 +548,12 @@ class StreamsServiceImplTest {
         newEntity.setStreamId(UUID.randomUUID().toString());
         newEntity.setEventType(StreamMetadataResponseV25.EventTypeEnum.STATUS.name());
 
-        Mockito.when(streamEntityDao.get(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(replacedEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(replacedEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+replacedEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(Tuples.of(replacedEntity, retryEntity)));
         Mockito.when(streamEntityDao.replaceEntity(Mockito.any(), Mockito.any() )).thenReturn(Mono.just(newEntity));
 
         //WHEN
@@ -636,7 +663,12 @@ class StreamsServiceImplTest {
         disabledEntity.setEventType(StreamMetadataResponseV25.EventTypeEnum.STATUS.name());
         disabledEntity.setVersion("v23");
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -660,7 +692,12 @@ class StreamsServiceImplTest {
         disabledEntity.setVersion("v23");
         disabledEntity.setGroups(Collections.EMPTY_LIST);
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -685,7 +722,12 @@ class StreamsServiceImplTest {
         disabledEntity.setVersion("v23");
         disabledEntity.setDisabledDate(Instant.now());
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -710,7 +752,12 @@ class StreamsServiceImplTest {
         disabledEntity.setVersion("v10");
         disabledEntity.setDisabledDate(Instant.now());
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -736,7 +783,12 @@ class StreamsServiceImplTest {
         disabledEntity.setDisabledDate(Instant.now());
         disabledEntity.setGroups(Arrays.asList("gruppo1","gruppo2"));
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -760,7 +812,12 @@ class StreamsServiceImplTest {
         disabledEntity.setVersion("v23");
         disabledEntity.setGroups(Arrays.asList("gruppo1","gruppo2"));
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -786,7 +843,12 @@ class StreamsServiceImplTest {
         disabledEntity.setVersion("v23");
         disabledEntity.setGroups(Arrays.asList("gruppo1","gruppo2"));
 
-        Mockito.when(streamEntityDao.get(Mockito.any(), Mockito.any())).thenReturn(Mono.just(disabledEntity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(disabledEntity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+disabledEntity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(Mockito.any(), Mockito.any())).thenReturn(Mono.just(Tuples.of(disabledEntity, retryEntity)));
         Mockito.when(streamEntityDao.disable(Mockito.any())).thenReturn(Mono.just(disabledEntity));
 
         //WHEN
@@ -813,7 +875,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
         entity.setVersion("v10");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -842,7 +909,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
         entity.setVersion("v10");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -871,7 +943,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
         entity.setVersion("v23");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -901,7 +978,12 @@ class StreamsServiceImplTest {
         entity.setVersion("v23");
         entity.setGroups(Arrays.asList("gruppo1","gruppo2"));
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -931,7 +1013,12 @@ class StreamsServiceImplTest {
         entity.setVersion("v23");
         entity.setGroups(Collections.emptyList());
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -966,7 +1053,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
         entity.setVersion(entityVersion);
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -1000,7 +1092,12 @@ class StreamsServiceImplTest {
         entity.setVersion(entityVersion);
         entity.setGroups(Arrays.asList("gruppo1"));
 
-        Mockito.when(streamEntityDao.get(xpagopacxid,uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.delete(xpagopacxid, uuid)).thenReturn(Mono.empty());
         Mockito.doNothing().when(schedulerService).scheduleWebhookEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any());
 
@@ -1035,7 +1132,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
 
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
 
@@ -1067,7 +1169,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
         entity.setGroups(Collections.emptyList());
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Arrays.asList("gruppo1"),null, uuidd, Mono.just(req));
@@ -1099,7 +1206,12 @@ class StreamsServiceImplTest {
         entity.setGroups(Collections.emptyList());
         entity.setVersion("v23");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Collections.EMPTY_LIST,null, uuidd, Mono.just(req));
@@ -1133,7 +1245,12 @@ class StreamsServiceImplTest {
         entity.setVersion("v23");
 
         Mockito.when(pnExternalRegistryClient.getGroups(Mockito.anyString(), Mockito.anyString())).thenReturn(Arrays.asList("gruppo1","gruppo2"));
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Collections.EMPTY_LIST,null, uuidd, Mono.just(req));
@@ -1168,7 +1285,12 @@ class StreamsServiceImplTest {
         entity.setVersion("v23");
 
         Mockito.when(pnExternalRegistryClient.getGroups(Mockito.anyString(), Mockito.anyString())).thenReturn(Arrays.asList("gruppo1","gruppo2"));
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Collections.EMPTY_LIST,null, uuidd, Mono.just(req));
@@ -1203,7 +1325,12 @@ class StreamsServiceImplTest {
         entity.setVersion("v23");
 
         Mockito.when(pnExternalRegistryClient.getGroups(Mockito.anyString(), Mockito.anyString())).thenReturn(Arrays.asList("gruppo1","gruppo2"));
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Collections.EMPTY_LIST,null, uuidd, Mono.just(req));
@@ -1237,7 +1364,12 @@ class StreamsServiceImplTest {
         entity.setGroups(Arrays.asList("gruppo1"));
         entity.setVersion("v23");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Arrays.asList("gruppo1","gruppo2"),null, uuidd, Mono.just(req));
@@ -1270,7 +1402,12 @@ class StreamsServiceImplTest {
         entity.setGroups(Arrays.asList("gruppo1","gruppo2"));
         entity.setVersion("v23");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         Mono<StreamMetadataResponseV25> mono = webhookService.updateEventStream(xpagopapnuid,xpagopacxid,Arrays.asList("gruppo1","gruppo2"),null, uuidd, Mono.just(req));
@@ -1558,9 +1695,13 @@ class StreamsServiceImplTest {
         entity.setGroups(Collections.EMPTY_LIST);
 
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
-        Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
 
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
+        Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
         //WHEN
         StreamMetadataResponseV25 res = webhookService.updateEventStream(xpagopapnuid,xpagopacxid, Arrays.asList("gruppo1"),"v10", uuidd, Mono.just(req)).block(d);
@@ -1601,7 +1742,12 @@ class StreamsServiceImplTest {
         entity.setVersion(entityVersion);
 
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
 
@@ -1641,7 +1787,12 @@ class StreamsServiceImplTest {
         entity.setFilterValues(new HashSet(Arrays.asList("AAAA","BBBB")));
 
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
         Mockito.when(pnExternalRegistryClient.getGroups(Mockito.anyString(), Mockito.anyString())).thenReturn(Arrays.asList("gruppo1","gruppo2"));
 
@@ -1676,7 +1827,12 @@ class StreamsServiceImplTest {
         entity.setActivationDate(Instant.now());
 
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
 
@@ -1711,7 +1867,12 @@ class StreamsServiceImplTest {
         entity.setGroups(Collections.EMPTY_LIST);
         entity.setVersion("v23");
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
 
@@ -1776,7 +1937,12 @@ class StreamsServiceImplTest {
         entity.setVersion(null);
 
 
-        Mockito.when(streamEntityDao.get(xpagopacxid, uuid)).thenReturn(Mono.just(entity));
+        WebhookStreamRetryAfter retryEntity = new WebhookStreamRetryAfter();
+        retryEntity.setPaId(entity.getPaId());
+        retryEntity.setStreamId(WebhookStreamRetryAfter.RETRY_PREFIX+entity.getStreamId());
+        retryEntity.setRetryAfter(Instant.now());
+
+        Mockito.when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, retryEntity)));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
 
