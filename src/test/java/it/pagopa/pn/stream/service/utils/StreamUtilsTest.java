@@ -54,9 +54,7 @@ class StreamUtilsTest {
     @BeforeEach
     void setup() {
 
-        timelineService = Mockito.mock(TimelineService.class);
         notificationService = Mockito.mock(NotificationService.class);
-        statusService = Mockito.mock(StatusService.class);
         pnStreamConfigs = Mockito.mock( PnStreamConfigs.class );
         timelineMapper = new DtoToEntityWebhookTimelineMapper();
         objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -73,7 +71,7 @@ class StreamUtilsTest {
         webhook.setCurrentVersion("v23");
         Mockito.when(pnStreamConfigs.getWebhook()).thenReturn(webhook);
 
-        streamUtils = new StreamUtils(timelineService, statusService, notificationService, pnStreamConfigs, timelineMapper, entityToDtoTimelineMapper, timelineElementJsonConverter, notificationDao);
+        streamUtils = new StreamUtils(notificationService, pnStreamConfigs, timelineMapper, entityToDtoTimelineMapper, timelineElementJsonConverter, notificationDao);
     }
 
     @Test

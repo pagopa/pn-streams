@@ -40,7 +40,7 @@ public class StreamActionsEventHandler {
         MDCUtils.addMDCToContextAndExecute(
             webhookService
                     .purgeEvents(evt.getStreamId(), evt.getEventId(), evt.getType() == StreamEventType.PURGE_STREAM_OLDER_THAN)
-        ).block(); // todo che dati vanno inseriti???
+        ).block();
         
         log.debug("[exit] doHandlePurgeEvent evt={}", evt);
     }
