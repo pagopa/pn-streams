@@ -40,7 +40,7 @@ public class StreamActionsEventHandler {
         MDCUtils.addMDCToContextAndExecute(
             webhookService
                     .purgeEvents(evt.getStreamId(), evt.getEventId(), evt.getType() == StreamEventType.PURGE_STREAM_OLDER_THAN)
-        ).block();
+        ).block(); // todo che dati vanno inseriti???
         
         log.debug("[exit] doHandlePurgeEvent evt={}", evt);
     }
@@ -50,7 +50,7 @@ public class StreamActionsEventHandler {
 
         MDCUtils.addMDCToContextAndExecute(
             webhookService
-                    .saveEvent(evt.getPaId(), evt.getTimelineId(), evt.getIun())
+                    .saveEvent(evt.getTimelineElementInternal(), evt.getType())
         ).block();
         
         log.debug("[exit] doHandleRegisterEvent evt={}", evt);
