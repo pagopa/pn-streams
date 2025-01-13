@@ -2,6 +2,10 @@
   "Parameters" : {
     "StreamEventManagerLambdaMaximumBatchingWindowInSeconds": "20",
     "StreamEventManagerLambdaBatchSize": "60",
-    "PnNotificationTableName": "pn-Notification"
+    "StreamsTableName": "",
+    "StreamsTableArn": "",
+    "EventsTableName": "",
+    "EventsTableArn": "",
+    "PnNotificationTableName": ""
   }
 }

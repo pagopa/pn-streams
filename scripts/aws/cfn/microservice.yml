@@ -186,29 +186,21 @@ Parameters:
     Type: String
     Description: 'DLQ ARN for NotificationStreamManagerLambda'
 
-  DoneActionsQueueAlarmARN:
+  EventQueueAlarmARN:
     Type: String
     Description: stream actions queue dlq alarm ARN
 
-  DoneActionsQueueAgeAlarmARN:
+  EventQueueAgeAlarmARN:
     Type: String
     Description: stream actions queue age alarm ARN
 
-  DoneActionsQueueName:
+  EventQueueName:
     Type: String
     Description: actions queue name
 
-  DoneActionsQueueARN:
+  EventQueueARN:
     Type: String
     Description: actions queue ARN
-
-  StreamEventManagerDLQAlarmARN:
-    Type: String
-    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
-
-  StreamEventManagerDLQARN:
-    Type: String
-    Description: 'DLQ ARN for StreamEventManagerLambda'
 
   StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
     Type: Number
@@ -220,12 +212,6 @@ Parameters:
     Default: 60
     Description: Batch size for lambda triggering
 
-  StreamEventManagerLambdaName:
-    Type: String
-    Default: Name of Event Manager Lambda
-
-  # CDC
-
   CdcKinesisSourceStreamArn:
     Type: String
     Description: 'Where to send CDC'
@@ -234,17 +220,46 @@ Parameters:
     Description: "Kinesis source CDC stream crypto key ARN"
     Type: String
 
-  WebhookNotificationTableName:
+  StreamNotificationTableName:
     Type: String
-    Description: 'Name of dynamodb table containing webhook notifications'
+    Description: 'Name of dynamodb table containing stream notifications'
 
-  WebhookNotificationTableArn:
+  StreamNotificationTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing webhook notifications'
+    Description: 'ARN of dynamodb table containing stream notifications'
+
+  StreamsTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing'
+
+  StreamsTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing'
+
+  EventsTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing'
+
+  EventsTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing'
 
   PnNotificationTableName:
     Type: String
-    Description: 'Name of dynamodb table containing notifications'
+    Description: 'Name of dynamodb table containing'
+
+  StreamAutoscalingThreshold:
+    Type: Number
+    Description: 'Threshold for autoscaling'
+    Default: 1000
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'DLQ ARN for StreamEventManagerLambda'
+
+  StreamEventManagerDLQAlarmARN:
+    Type: String
+    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
 
 Resources:
 
@@ -261,21 +276,19 @@ Resources:
         HealthCheckInterval: !Ref HealthCheckInterval
         HealthyThresholdCount: !Ref HealthyThresholdCount
         UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-        AutoscalingStrategy: CUSTOM
-        AutoscalingThreshold: !Ref AutoscalingThreshold
-        AutoscalingCheckPeriod: !Ref AutoscalingCheckPeriod
+        AutoscalingStrategy: 'SQS'
+        AutoscalingQueueName: !Ref EventQueueName
+        AutoscalingThreshold: !Ref StreamAutoscalingThreshold
         MinTasksNumber: !Ref MinTasksNumber
         MaxTasksNumber: !Ref MaxTasksNumber
-        AutoscalingDataPointN: !Ref AutoscalingDataPointN
-        AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         EfsFilesystem: !Ref FargateEFSFileSystemID
         MountEfs: !Ref MountEfs
         WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_WEBHOOKNOTIFICATIONTABLE=${WebhookNotificationTableName}'
+        ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/*'
+        MappedPaths: '/delivery-progresses/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Join [ ',', !Ref SubnetsIds ]
         VpcId: !Ref VpcId
@@ -299,8 +312,12 @@ Resources:
               - dynamodb:GetItem
               - dynamodb:PutItem
             Resource:
-              - !Sub "${WebhookNotificationTableArn}"
-              - !Sub "${WebhookNotificationTableArn}/*"
+              - !Sub "${StreamsTableArn}"
+              - !Sub "${StreamsTableArn}/*"
+              - !Sub "${EventsTableArn}"
+              - !Sub "${EventsTableArn}/*"
+              - !Sub "${StreamNotificationTableArn}"
+              - !Sub "${StreamNotificationTableArn}/*"
           - Effect: Allow
             Action:
               - sqs:ChangeMessageVisibility
@@ -312,7 +329,14 @@ Resources:
               - sqs:ReceiveMessage
               - sqs:SendMessage
               - sqs:SendMessageBatch
-            Resource: !Ref DoneActionsQueueARN
+            Resource: !Ref EventQueueARN
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource: !Ref StreamEventManagerDLQARN
 
   #########################################################
   ###         NotificationStreamManagerLambda           ###
@@ -424,82 +448,21 @@ Resources:
         DashboardName: !Sub "${ProjectName}-stream"
         AlarmArns: !Join
           - ','
-          - - !Ref DoneActionsQueueAlarmARN
-            - !Ref DoneActionsQueueAgeAlarmARN
+          - - !Ref EventQueueAlarmARN
+            - !Ref EventQueueAgeAlarmARN
         QueueArns: !Join
           - ','
-          - - !Ref StreamEventManagerDLQAlarmARN
-            - !Ref DoneActionsQueueARN
+          - - !Ref EventQueueARN
+            - !Ref StreamEventManagerDLQAlarmARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
-            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
         DynamoDBTableNames: !Join
           - ','
-          - - !Ref WebhookNotificationTableName
-
-  #### Alarm for custom metric Autoscaling
-  AlarmCustomAutoscaling:
-    Type: "AWS::CloudWatch::Alarm"
-    Properties:
-      AlarmName: !Sub "${ProjectName}-stream-autoscaling-custom"
-      AlarmDescription: "Trigger scaling based on custom metric"
-      DatapointsToAlarm: !Ref AutoscalingDataPointN
-      ComparisonOperator: "GreaterThanOrEqualToThreshold"
-      Metrics:
-        - Id: m1
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: QueueName
-                  Value: !Ref "DoneActionsQueueName"
-              Namespace: "AWS/SQS"
-              MetricName: "ApproximateNumberOfMessagesVisible"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Average
-          ReturnData: False
-        - Id: m4
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: TargetGroup
-                  Value: !GetAtt StreamMicroservice.Outputs.TargetGroupName
-              Namespace: "AWS/ApplicationELB"
-              MetricName: "RequestCountPerTarget"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Sum
-          ReturnData: False
-        - Id: m5
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: TargetGroup
-                  Value: !GetAtt StreamMicroservice.Outputs.TargetGroupName
-                - Name: LoadBalancer
-                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
-              Namespace: "AWS/ApplicationELB"
-              MetricName: "HealthyHostCount"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Average
-          ReturnData: False
-        - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100 * m1) / (${ConsumedQueueMessagePerMinute} * m5) )"
-          Label: !Sub "${ProjectName}-stream-event-queue-custom-metric"
-          ReturnData: False
-        - Id: http
-          Expression: !Sub "(100 * m4) / ${AutoscalingThreshold}"
-          Label: !Sub "${ProjectName}-stream-http-custom-metric"
-          ReturnData: False
-        - Id: e1
-          Expression: "IF( code<http, http, code )"
-          Label: !Sub "${ProjectName}-stream-autoscale-custom-metric"
-      EvaluationPeriods: !Ref AutoscalingDataPointM
-      Threshold: 60
-      AlarmActions:
-        - !GetAtt StreamMicroservice.Outputs.ScaleUpPolicy
-      OKActions:
-        - !GetAtt StreamMicroservice.Outputs.ScaleDownPolicy
+          - - !Ref StreamNotificationTableName
+            - !Ref StreamsTableName
+            - !Ref EventsTableName
 
 Outputs:
   #
