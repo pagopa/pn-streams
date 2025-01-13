@@ -1,9 +1,0 @@
-
-components:
-  schemas:
-
-    RecipientType:
-      type: string
-      enum:
-        - PF
-        - PG
