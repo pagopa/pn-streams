@@ -115,16 +115,6 @@ Parameters:
     Default: 10
     Description: Maximum number of tasks for the service
 
-  AutoscalingDataPointN:
-    Type: Number
-    Default: 3
-    Description: Number of data points to alarm for autoscaling
-
-  AutoscalingDataPointM:
-    Type: Number
-    Default: 5
-    Description: Number of evaluation periods for autoscaling
-
   FargateEFSFileSystemID:
     Type: String
     Description: EFS File System ID for Fargate
@@ -132,10 +122,12 @@ Parameters:
   MountEfs:
     Type: String
     Description: Whether to mount EFS (true/false)
+    Default: 'false'
 
   WireTapLogActivation:
     Type: String
     Description: Whether to activate wiretap logging (true/false)
+    Default: 'false'
 
   ContainerImageURI:
     Type: String
@@ -202,12 +194,12 @@ Parameters:
     Type: String
     Description: actions queue ARN
 
-  StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
+  NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds:
     Type: Number
     Default: 20
     Description: Batching window size for lambda triggering
 
-  StreamEventManagerLambdaBatchSize:
+  NotificationStreamManagerLambdaBatchSize:
     Type: Number
     Default: 60
     Description: Batch size for lambda triggering
@@ -415,13 +407,13 @@ Resources:
   NotificationStreamManagerLambdaKinesisSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
+      BatchSize: !Sub ${NotificationStreamManagerLambdaBatchSize}
       BisectBatchOnFunctionError: true
       EventSourceArn: !Ref CdcKinesisSourceStreamArn
       FunctionName: !Ref NotificationStreamManagerLambda
       FunctionResponseTypes:
         - ReportBatchItemFailures
-      MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
+      MaximumBatchingWindowInSeconds: !Sub ${NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds}
       StartingPosition: TRIM_HORIZON
       DestinationConfig:
         OnFailure:
