@@ -129,10 +129,6 @@ Parameters:
     Description: Whether to activate wiretap logging (true/false)
     Default: 'false'
 
-  ContainerImageURI:
-    Type: String
-    Description: URI of the container image
-
   AlbSecurityGroup:
     Type: String
     Description: Security group for the application load balancer
@@ -144,6 +140,7 @@ Parameters:
   LogAlarmStrategy:
     Type: String
     Description: Log alarm strategy
+    Default: 'FATAL'
 
   ConsumedQueueMessagePerMinute:
     Type: Number
@@ -280,7 +277,7 @@ Resources:
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/delivery-progresses/*'
+        MappedPaths: '/delivery-progresses-stream/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Join [ ',', !Ref SubnetsIds ]
         VpcId: !Ref VpcId
