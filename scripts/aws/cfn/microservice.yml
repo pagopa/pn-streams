@@ -51,9 +51,6 @@ Parameters:
     Type: String
     Description: 'network load balancer link for API-GW'
   
-  LogsKinesisSourceStreamArn:
-    Type: String
-    Description: 'Kinesis stream that receive logs'
   
   Version:
     Type: String
@@ -95,16 +92,6 @@ Parameters:
     Default: 3
     Description: Number of consecutive health check failures required before considering a target unhealthy
 
-  AutoscalingThreshold:
-    Type: Number
-    Default: 75
-    Description: CPU utilization percentage to trigger autoscaling
-
-  AutoscalingCheckPeriod:
-    Type: Number
-    Default: 60
-    Description: Period in seconds to check for autoscaling
-
   MinTasksNumber:
     Type: Number
     Default: 1
@@ -142,15 +129,6 @@ Parameters:
     Description: Log alarm strategy
     Default: 'FATAL'
 
-  ConsumedQueueMessagePerMinute:
-    Type: Number
-    Default: 0
-    Description: Weight to assign to queue number of visible messages metric
-
-  ApplicationLoadBalancerMetricsDimensionName:
-    Type: String
-    Default: ''
-    Description: Application load balancer dimension name
 
   NotificationStreamManagerLambdaName:
     Type: String
@@ -242,14 +220,6 @@ Parameters:
     Description: 'Threshold for autoscaling'
     Default: 1000
 
-  StreamEventManagerDLQARN:
-    Type: String
-    Description: 'DLQ ARN for StreamEventManagerLambda'
-
-  StreamEventManagerDLQAlarmARN:
-    Type: String
-    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
-
 Resources:
 
   # pn-stream microservice
@@ -319,13 +289,7 @@ Resources:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource: !Ref EventQueueARN
-          - Effect: Allow
-            Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:SendMessage
-            Resource: !Ref StreamEventManagerDLQARN
+
 
   #########################################################
   ###         NotificationStreamManagerLambda           ###
