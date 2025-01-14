@@ -406,7 +406,6 @@ Resources:
         QueueArns: !Join
           - ','
           - - !Ref EventQueueARN
-            - !Ref StreamEventManagerDLQAlarmARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
