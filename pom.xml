@@ -26,13 +26,13 @@
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-model</artifactId>
-			<version>2.3.0-SNAPSHOT</version>
+			<version>2.5.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-commons</artifactId>
-			<version>2.6.1-SNAPSHOT</version>
+			<version>2.6.0</version>
 		</dependency>
 
 		<dependency>
@@ -152,129 +152,34 @@
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
 				<version>5.4.0</version>
-				<executions>
+				<executions>					
 					<execution>
-						<phase>generate-resources</phase>
-						<id>pn-external-webhook</id>
+						<id>generate-stream-server</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
+						<phase>process-resources</phase>
 						<configuration>
-							<typeMappings>
-								<typeMapping>Date=Instant</typeMapping>
-							</typeMappings>
-							<importMappings>
-								<importMapping>java.util.Date=java.time.Instant</importMapping>
-								<importMapping>Date=java.time.Instant</importMapping>
-							</importMappings>
 							<inputSpec>${project.basedir}/docs/openapi/pn-stream-api-internal.yaml</inputSpec>
 							<generatorName>spring</generatorName>
-							<library>spring-boot</library>
-							<modelNameSuffix />
+              				<library>spring-boot</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
 							<generateApiTests>false</generateApiTests>
 							<generateModelTests>false</generateModelTests>
-							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
 							<configOptions>
-								<basePackage>${project.groupId}.stream.generated.openapi.server.v1</basePackage>
-								<modelPackage>${project.groupId}.stream.generated.openapi.server.v1.dto</modelPackage>
-								<apiPackage>${project.groupId}.stream.generated.openapi.server.v1.api</apiPackage>
-								<configPackage>${project.groupId}.stream.generated.openapi.server.v1.config</configPackage>
-								<dateLibrary>java11</dateLibrary>
-								<delegatePattern>true</delegatePattern>
-								<interfaceOnly>true</interfaceOnly>
-								<annotationLibrary>none</annotationLibrary>
-								<documentationProvider>source</documentationProvider>
-								<openApiNullable>false</openApiNullable>
-								<additionalModelTypeAnnotations>@lombok.Builder(toBuilder = true); @lombok.NoArgsConstructor; @lombok.AllArgsConstructor; @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)</additionalModelTypeAnnotations>
-								<reactive>true</reactive>
-								<skipDefaultInterface>false</skipDefaultInterface>
-								<useTags>true</useTags>
-							</configOptions>
-						</configuration>
-					</execution>
-					<execution>
-						<phase>generate-resources</phase>
-						<id>generate-client-pn-delivery</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/78d5e316a3e184ddb55003da6543d488cf7db911/docs/openapi/api-private.yaml</inputSpec>
-							<skipValidateSpec>true</skipValidateSpec>
-							<generatorName>java</generatorName>
-							<library>resttemplate</library>
-							<generateApiTests>false</generateApiTests>
-							<generateModelTests>false</generateModelTests>
-							<typeMappings>
-								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
-							</typeMappings>
-							<configOptions>
-								<apiPackage>${project.groupId}.stream.generated.openapi.msclient.delivery.api</apiPackage>
-								<modelPackage>${project.groupId}.stream.generated.openapi.msclient.delivery.model</modelPackage>
-								<dateLibrary>java8</dateLibrary>
-								<annotationLibrary>none</annotationLibrary>
-								<documentationProvider>source</documentationProvider>
-								<openApiNullable>false</openApiNullable>
-								<useAbstractionForFiles>true</useAbstractionForFiles>
-								<useBeanValidation>false</useBeanValidation>
-							</configOptions>
-						</configuration>
-					</execution>
-					<execution>
-						<phase>generate-resources</phase>
-						<id>generate-client-pn-data-vault-reactive</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-data-vault/49b6943f95dfac51c2c8fd1aa381e9200ff7f97c/docs/openapi/pn-datavault-api-v1.yaml</inputSpec>
-							<generatorName>java</generatorName>
-							<library>webclient</library>
-							<generateApiTests>false</generateApiTests>
-							<generateModelTests>false</generateModelTests>
-							<typeMappings><typeMapping>OffsetDateTime=Instant</typeMapping></typeMappings>
-							<importMappings><importMapping>java.time.OffsetDateTime=java.time.Instant</importMapping></importMappings>
-							<templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
-							<configOptions>
-								<apiPackage>${project.groupId}.stream.generated.openapi.msclient.datavault-reactive.api</apiPackage>
-								<modelPackage>${project.groupId}.stream.generated.openapi.msclient.datavault.model</modelPackage>
-								<dateLibrary>java8</dateLibrary>
-								<delegatePattern>true</delegatePattern>
-								<interfaceOnly>true</interfaceOnly>
-								<annotationLibrary>none</annotationLibrary>
-								<documentationProvider>source</documentationProvider>
-								<openApiNullable>false</openApiNullable>
-								<reactive>true</reactive>
-								<skipDefaultInterface>false</skipDefaultInterface>
-								<useTags>true</useTags>
-								<additionalModelTypeAnnotations>@lombok.Builder(toBuilder = true); @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
-
-							</configOptions>
-						</configuration>
-					</execution>
-					<execution>
-						<phase>generate-resources</phase>
-						<id>generate-client-pn-external-registry-selfcare-private</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-external-registries/65fa8a57302d51b06fdffd94c163ea4e88ca52e0/docs/openapi/pn-selfcare-internal-v1.yaml</inputSpec>
-							<generatorName>java</generatorName>
-							<library>resttemplate</library>
-							<generateApiTests>false</generateApiTests>
-							<generateModelTests>false</generateModelTests>
-							<typeMappings><typeMapping>OffsetDateTime=Instant</typeMapping></typeMappings>
-							<importMappings><importMapping>java.time.OffsetDateTime=java.time.Instant</importMapping></importMappings>
-							<configOptions>
-								<apiPackage>${project.groupId}.stream.generated.openapi.msclient.externalregistry.api</apiPackage>
-								<modelPackage>${project.groupId}.stream.generated.openapi.msclient.externalregistry.model</modelPackage>
-								<dateLibrary>java8</dateLibrary>
-								<annotationLibrary>none</annotationLibrary>
-								<documentationProvider>source</documentationProvider>
-								<openApiNullable>false</openApiNullable>
-								<useAbstractionForFiles>true</useAbstractionForFiles>
-								<useBeanValidation>false</useBeanValidation>
+							<dateLibrary>java11</dateLibrary>
+							<delegatePattern>true</delegatePattern>
+							<interfaceOnly>true</interfaceOnly>
+							<annotationLibrary>none</annotationLibrary>
+							<documentationProvider>source</documentationProvider>
+							<openApiNullable>false</openApiNullable>
+							<reactive>true</reactive>
+							<skipDefaultInterface>false</skipDefaultInterface>
+							<useTags>true</useTags>
+							<basePackage>${project.groupId}.stream.rest.v1</basePackage>
+							<modelPackage>${project.groupId}.stream.rest.v1.dto</modelPackage>
+							<apiPackage>${project.groupId}.stream.rest.v1.api</apiPackage>
+							<configPackage>${project.groupId}.stream.rest.v1.config</configPackage>
 							</configOptions>
 						</configuration>
 					</execution>
