@@ -1,7 +1,7 @@
 package it.pagopa.pn.stream.generated.openapi.server.stream.v1.dto;
 
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.Problem;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ProblemError;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.Problem;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.ProblemError;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -11,6 +11,5 @@ import java.util.Optional;
 public interface ConfidentialInformationService {
         Flux<ConfidentialTimelineElementDtoInt> getTimelineConfidentialInformation(List<TimelineElementInternal> timelineElementInternal);
 
-        Optional<Map<String, ConfidentialTimelineElementDtoInt>> getTimelineConfidentialInformation(String iun);
 
 }

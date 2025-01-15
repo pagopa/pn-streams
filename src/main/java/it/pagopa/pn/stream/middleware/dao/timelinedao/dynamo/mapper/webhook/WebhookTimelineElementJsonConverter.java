@@ -2,6 +2,7 @@ package it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.pagopa.pn.commons.exceptions.PnInternalException;

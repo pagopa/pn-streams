@@ -1,5 +1,6 @@
 package it.pagopa.pn.stream.generated.openapi.msclient.datavault.auth;
 
+import it.pagopa.pn.stream.generated.openapi.msclient.datavault_reactive.auth.HttpBearerAuth;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

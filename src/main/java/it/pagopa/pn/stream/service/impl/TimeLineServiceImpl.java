@@ -4,32 +4,16 @@ import it.pagopa.pn.stream.dto.address.CourtesyDigitalAddressInt;
 import it.pagopa.pn.stream.dto.address.LegalDigitalAddressInt;
 import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
-import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
-import it.pagopa.pn.stream.dto.timeline.details.CourtesyAddressRelatedTimelineElement;
-import it.pagopa.pn.stream.dto.timeline.details.DigitalAddressRelatedTimelineElement;
-import it.pagopa.pn.stream.dto.timeline.details.NewAddressRelatedTimelineElement;
-import it.pagopa.pn.stream.dto.timeline.details.PersonalInformationRelatedTimelineElement;
-import it.pagopa.pn.stream.dto.timeline.details.PhysicalAddressRelatedTimelineElement;
-import it.pagopa.pn.stream.dto.timeline.details.TimelineElementDetailsInt;
-import it.pagopa.pn.stream.middleware.dao.timelinedao.TimelineDao;
-import it.pagopa.pn.stream.service.ConfidentialInformationService;
+import it.pagopa.pn.stream.dto.timeline.details.*;
 import it.pagopa.pn.stream.service.TimelineService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class TimeLineServiceImpl implements TimelineService {
-
-    private final TimelineDao timelineDao;
-    private final ConfidentialInformationService confidentialInformationService;
 
     @Override
     public void enrichTimelineElementWithConfidentialInformation(TimelineElementDetailsInt details,
@@ -107,41 +91,5 @@ public class TimeLineServiceImpl implements TimelineService {
                 .municipalityDetails(physicalAddress2.getMunicipalityDetails())
                 .foreignState(physicalAddress2.getForeignState())
                 .build();
-    }
-
-    @Override
-    public Set<TimelineElementInternal> getTimelineByIunTimelineId(String iun, String timelineId, boolean confidentialInfoRequired) {
-        log.debug("getTimelineByIunTimelineId - iun={} timelineId={}", iun, timelineId);
-        Set<TimelineElementInternal> setTimelineElements =  this.timelineDao.getTimelineFilteredByElementId(iun, timelineId);
-        setConfidentialInfo(confidentialInfoRequired, iun, setTimelineElements);
-        return setTimelineElements;
-    }
-
-    private void setConfidentialInfo(boolean confidentialInfoRequired, String iun, Set<TimelineElementInternal> setTimelineElements) {
-        if (confidentialInfoRequired) {
-            Optional<Map<String, ConfidentialTimelineElementDtoInt>> mapConfOtp;
-            mapConfOtp = confidentialInformationService.getTimelineConfidentialInformation(iun);
-
-            if (mapConfOtp.isPresent()) {
-                Map<String, ConfidentialTimelineElementDtoInt> mapConf = mapConfOtp.get();
-
-                setTimelineElements.forEach(
-                        timelineElementInt -> {
-                            ConfidentialTimelineElementDtoInt dtoInt = mapConf.get(timelineElementInt.getElementId());
-                            if (dtoInt != null) {
-                                enrichTimelineElementWithConfidentialInformation(timelineElementInt.getDetails(), dtoInt);
-                            }
-                        }
-                );
-            }
-        }
-    }
-
-    @Override
-    public Set<TimelineElementInternal> getTimeline(String iun, boolean confidentialInfoRequired) {
-        log.debug("GetTimeline - iun={} ", iun);
-        Set<TimelineElementInternal> setTimelineElements = this.timelineDao.getTimeline(iun);
-        setConfidentialInfo(confidentialInfoRequired, iun, setTimelineElements);
-        return setTimelineElements;
     }
 }

@@ -29,6 +29,8 @@ public class PnStreamExceptionCodes extends PnExceptionsCodes {
     public static final String ERROR_CODE_STREAM_NOTIFICATIONFAILED = "PN_STREAM_NOTIFICATIONFAILED";
     public static final String ERROR_CODE_STREAM_RETRYAFTER_FAILED = "PN_STREAM_RETRY_AFTER_ERROR";
 
+    public static final String ERROR_CODE_GENERIC = "PN_GENERIC_ERROR";
+
     @Getter
     public enum NotificationRefusedErrorCodeInt {
         FILE_NOTFOUND("FILE_NOTFOUND"),

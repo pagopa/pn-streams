@@ -12,14 +12,4 @@ public class StreamEventsServiceMock implements StreamEventsService {
     public Mono<ProgressResponseElementDto> consumeEventStream(String xPagopaPnCxId, List<String> xPagopaPnCxGroups, String xPagopaPnApiVersion, UUID streamId, String lastEventId) {
         return null;
     }
-
-    @Override
-    public Mono<Void> saveEvent(String paId, String eventId, String iun) {
-        return null;
-    }
-
-    @Override
-    public Mono<Void> purgeEvents(String streamId, String eventId, boolean olderThan) {
-        return null;
-    }
 }

@@ -27,30 +27,11 @@ public class PnDataVaultClientReactiveMock implements PnDataVaultClientReactive 
     public void insertBaseRecipientDto(BaseRecipientDto dto){
         confidentialMap.put(dto.getInternalId(), dto);
     }
-    
-    @Override
-    public Flux<BaseRecipientDto> getRecipientsDenominationByInternalId(List<String> listInternalId) {
-        return Flux.fromStream(listInternalId.stream()
-                .filter( internalId -> confidentialMap.get(internalId) != null)
-                .map(internalId -> confidentialMap.get(internalId)));
-    }
+
 
     @Override
     public Flux<ConfidentialTimelineElementDto> getNotificationTimelines(List<ConfidentialTimelineElementId> confidentialTimelineElementId) {
         return null;
-    }
-
-    @Override
-    public Mono<Void> updateNotificationAddressesByIun(String iun, Boolean normalized, List<NotificationRecipientAddressesDto> list) {
-        return Mono.fromRunnable( () -> {
-            int recIndex = 0;
-            for (NotificationRecipientAddressesDto recNormAddress : list ){
-                String key = getKey(iun, recIndex);
-                normalizedAddress.put(key, recNormAddress);
-                log.info("[TEST] normalized address isert is {}", recNormAddress);
-                recIndex ++;
-            } 
-        }).flatMap( res-> Mono.empty());
     }
 
     @NotNull

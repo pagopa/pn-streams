@@ -1,15 +1,15 @@
 package it.pagopa.pn.stream.service.mapper;
 
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.TimelineElementV25;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.TimelineElementV26;
 
 
 public class TimelineElementStreamMapper {
     private TimelineElementStreamMapper(){}
 
-    public static TimelineElementV25 internalToExternal(TimelineElementInternal internalDto) {
+    public static TimelineElementV26 internalToExternal(TimelineElementInternal internalDto) {
         // passo da TimelineElementMapper.internalToExternal(internalDto) in modo da replicare gli stessi controlli già presenti per il mapper di delivery push
-        TimelineElementV25 timelineElement = TimelineElementMapper.internalToExternal(internalDto);
-        return SmartMapper.mapToClass(timelineElement, TimelineElementV25.class);
+        TimelineElementV26 timelineElement = TimelineElementMapper.internalToExternal(internalDto);
+        return SmartMapper.mapToClass(timelineElement, TimelineElementV26.class);
     }
 }

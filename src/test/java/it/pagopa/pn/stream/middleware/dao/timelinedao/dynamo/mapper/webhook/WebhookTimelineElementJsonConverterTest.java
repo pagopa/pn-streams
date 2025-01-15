@@ -47,7 +47,6 @@ class WebhookTimelineElementJsonConverterTest {
                 "notificationSentAt":null,
                 "paId":null,
                 "legalFactIds":[],
-                "details":null,
                 "category":"SENDER_ACK_CREATION_REQUEST",
                 "ingestionTimestamp":"2025-02-09T15:30:00Z",
                 "timestamp":"2024-02-09T15:30:00Z",

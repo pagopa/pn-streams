@@ -2,8 +2,8 @@ package it.pagopa.pn.stream.service.mapper;
 
 import it.pagopa.pn.stream.dto.legalfacts.LegalFactCategoryInt;
 import it.pagopa.pn.stream.dto.legalfacts.LegalFactsIdInt;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.LegalFactCategoryV20;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.LegalFactsIdV20;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactCategoryV20;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactsIdV20;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

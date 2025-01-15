@@ -1,11 +1,8 @@
 package it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook;
 
-
-import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.LegalFactsIdEntity;
-import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.StatusInfoEntity;
-import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.TimelineElementCategoryEntity;
-import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.TimelineElementDetailsEntity;
-import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.TimelineElementCategoryEntityConverter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.pagopa.pn.stream.dto.timeline.StatusInfoEntity;
+import it.pagopa.pn.stream.utils.ObjectToStringDeserializer;
 import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
@@ -27,9 +24,10 @@ public class WebhookTimelineElementEntity {
     private String timelineElementId;
     private Instant timestamp;
     private String paId;
-    private TimelineElementCategoryEntity category;
-    private List<LegalFactsIdEntity> legalFactIds;
-    private TimelineElementDetailsEntity details;
+    private String category;
+    private List<String> legalFactIds;
+    @JsonDeserialize(using = ObjectToStringDeserializer.class)
+    private String details;
     private StatusInfoEntity statusInfo;
     private Instant notificationSentAt;
     private Instant ingestionTimestamp;
@@ -65,27 +63,26 @@ public class WebhookTimelineElementEntity {
     public void setPaId(String paId) {this.paId = paId;}
 
     @DynamoDbAttribute(value = "category")
-    @DynamoDbConvertedBy(TimelineElementCategoryEntityConverter.class)
-    public TimelineElementCategoryEntity getCategory() {
+    public String getCategory() {
         return category;
     }
-    public void setCategory(TimelineElementCategoryEntity category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
     @DynamoDbAttribute(value = "legalFactId")
-    public List<LegalFactsIdEntity> getLegalFactIds() {
+    public List<String> getLegalFactIds() {
         return legalFactIds;
     }
-    public void setLegalFactIds(List<LegalFactsIdEntity> legalFactIds) {
+    public void setLegalFactIds(List<String> legalFactIds) {
         this.legalFactIds = legalFactIds;
     }
     
     @DynamoDbAttribute(value = "details") @DynamoDbIgnoreNulls
-    public TimelineElementDetailsEntity getDetails() {
+    public String getDetails() {
         return details;
     }
-    public void setDetails(TimelineElementDetailsEntity details) {
+    public void setDetails(String details) {
         this.details = details;
     }
 
