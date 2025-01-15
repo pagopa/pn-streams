@@ -32,6 +32,7 @@ public class PnStreamConfigs {
     public static class Dao {
         private String streamsTableName;
         private String eventsTableName;
+        private String streamNotificationTable;
     }
 
     @Data

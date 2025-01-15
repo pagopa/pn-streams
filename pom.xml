@@ -17,6 +17,10 @@
 		<url>${git.url}</url>
 	  <tag>HEAD</tag>
   </scm>
+	<properties>
+		<jacoco.min.line.cover.ratio>0.70</jacoco.min.line.cover.ratio>
+		<pagopa.codegen.version>v01.06.01</pagopa.codegen.version>
+	</properties>
 
 	<dependencies>
 		<dependency>

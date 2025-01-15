@@ -27,9 +27,9 @@ Parameters:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
 
-  SubnetsIds:
-    Type: CommaDelimitedList
-    Description: 'subnets ids comma separated list. Where to deploy the microservice'
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'subnets ids. Where to deploy the microservice'
 
   VpcId:
     Type: String
@@ -50,10 +50,7 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-  
-  LogsKinesisSourceStreamArn:
-    Type: String
-    Description: 'Kinesis stream that receive logs'
+
   
   Version:
     Type: String
@@ -71,9 +68,10 @@ Parameters:
     Description: Fargate virtual CPU quantity 1024 equals one vCPU
 
   MemoryAmount:
-    Type: Number
-    Default: 2048
-    Description: Fargate memory amount in MB
+    Type: String
+    Default: 2GB
+    Description: memory amount reserved to the task pod.
+    AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
 
   HealthCheckTimeout:
     Type: Number
@@ -94,16 +92,6 @@ Parameters:
     Type: Number
     Default: 3
     Description: Number of consecutive health check failures required before considering a target unhealthy
-
-  AutoscalingThreshold:
-    Type: Number
-    Default: 75
-    Description: CPU utilization percentage to trigger autoscaling
-
-  AutoscalingCheckPeriod:
-    Type: Number
-    Default: 60
-    Description: Period in seconds to check for autoscaling
 
   MinTasksNumber:
     Type: Number
@@ -129,10 +117,6 @@ Parameters:
     Description: Whether to activate wiretap logging (true/false)
     Default: 'false'
 
-  ContainerImageURI:
-    Type: String
-    Description: URI of the container image
-
   AlbSecurityGroup:
     Type: String
     Description: Security group for the application load balancer
@@ -144,16 +128,8 @@ Parameters:
   LogAlarmStrategy:
     Type: String
     Description: Log alarm strategy
+    Default: 'FATAL'
 
-  ConsumedQueueMessagePerMinute:
-    Type: Number
-    Default: 0
-    Description: Weight to assign to queue number of visible messages metric
-
-  ApplicationLoadBalancerMetricsDimensionName:
-    Type: String
-    Default: ''
-    Description: Application load balancer dimension name
 
   NotificationStreamManagerLambdaName:
     Type: String
@@ -222,36 +198,28 @@ Parameters:
 
   StreamsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing stream'
+    Description: 'Name of dynamodb table containing'
 
   StreamsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing stream'
+    Description: 'ARN of dynamodb table containing'
 
   EventsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing events'
+    Description: 'Name of dynamodb table containing'
 
   EventsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing events'
+    Description: 'ARN of dynamodb table containing'
 
   PnNotificationTableName:
     Type: String
-    Description: 'Name of dynamodb table containing notifications'
+    Description: 'Name of dynamodb table containing'
 
   StreamAutoscalingThreshold:
     Type: Number
     Description: 'Threshold for autoscaling'
     Default: 1000
-
-  StreamEventManagerDLQARN:
-    Type: String
-    Description: 'DLQ ARN for StreamEventManagerLambda'
-
-  StreamEventManagerDLQAlarmARN:
-    Type: String
-    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
 
   ScheduleInterval:
     Type: String
@@ -269,6 +237,7 @@ Resources:
         MicroServiceUniqueName: !Sub '${ProjectName}-stream'
         CpuValue: !Ref CpuValue
         MemoryAmount: !Ref MemoryAmount
+        HealthCheckPath: /actuator/health
         HealthCheckTimeout: !Ref HealthCheckTimeout
         HealthCheckInterval: !Ref HealthCheckInterval
         HealthyThresholdCount: !Ref HealthyThresholdCount
@@ -283,12 +252,13 @@ Resources:
         MountEfs: !Ref MountEfs
         WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
-        ContainerEnvEntry2: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
+        ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
+        ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
+        ContainerEnvEntry3: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/delivery-progresses/*'
+        MappedPaths: '/delivery-progresses-stream/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Join [ ',', !Ref SubnetsIds ]
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
@@ -328,13 +298,7 @@ Resources:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource: !Ref EventQueueARN
-          - Effect: Allow
-            Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:SendMessage
-            Resource: !Ref StreamEventManagerDLQARN
+
 
   #########################################################
   ###         NotificationStreamManagerLambda           ###
@@ -426,7 +390,7 @@ Resources:
           Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: !Sub '{"tableName": [${PnNotificationTableName}], "eventName": ["INSERT"]}'
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnNotificationTableName}"]}'
 
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -451,7 +415,6 @@ Resources:
         QueueArns: !Join
           - ','
           - - !Ref EventQueueARN
-            - !Ref StreamEventManagerDLQAlarmARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
