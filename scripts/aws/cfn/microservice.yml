@@ -50,7 +50,7 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-  
+
   
   Version:
     Type: String
@@ -221,6 +221,11 @@ Parameters:
     Description: 'Threshold for autoscaling'
     Default: 1000
 
+  ScheduleInterval:
+    Type: String
+    Description: 'Time interval between two webhook-scans every scan send notifications
+                  update to Public Administration'
+
 Resources:
 
   # pn-stream microservice
@@ -249,6 +254,7 @@ Resources:
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
         ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
+        ContainerEnvEntry3: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName
@@ -385,7 +391,7 @@ Resources:
       FilterCriteria:
         Filters:
           - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnNotificationTableName}"]}'
-     
+
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
     Properties:
