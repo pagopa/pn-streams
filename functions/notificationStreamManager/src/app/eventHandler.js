@@ -7,13 +7,8 @@ const TABLE_NAME = "pn-webhookNotification";
 const MAX_TTL = process.env.MAX_TTL ? parseInt(process.env.MAX_TTL, 10) : 9223372036854775807;
 
 exports.handleEvent = async (event) => {
-  let cdcEvents;
-  try {
-    cdcEvents = extractKinesisData(event);
-  } catch (error) {
-    console.error("Error extracting Kinesis data:", error);
-    return { batchItemFailures: [] };
-  }
+
+  const cdcEvents = extractKinesisData(event);
   console.log(`Batch size: ${cdcEvents.length} cdc`);
 
   if (cdcEvents.length === 0) {
