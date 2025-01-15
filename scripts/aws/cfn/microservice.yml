@@ -27,9 +27,9 @@ Parameters:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
 
-  SubnetsIds:
-    Type: CommaDelimitedList
-    Description: 'subnets ids comma separated list. Where to deploy the microservice'
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'subnets ids. Where to deploy the microservice'
 
   VpcId:
     Type: String
@@ -232,6 +232,7 @@ Resources:
         MicroServiceUniqueName: !Sub '${ProjectName}-stream'
         CpuValue: !Ref CpuValue
         MemoryAmount: !Ref MemoryAmount
+        HealthCheckPath: /actuator/health
         HealthCheckTimeout: !Ref HealthCheckTimeout
         HealthCheckInterval: !Ref HealthCheckInterval
         HealthyThresholdCount: !Ref HealthyThresholdCount
@@ -246,11 +247,12 @@ Resources:
         MountEfs: !Ref MountEfs
         WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
+        ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
+        ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/delivery-progresses-stream/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Join [ ',', !Ref SubnetsIds ]
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
