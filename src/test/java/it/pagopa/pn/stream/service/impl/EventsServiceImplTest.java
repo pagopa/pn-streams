@@ -1,5 +1,6 @@
 package it.pagopa.pn.stream.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
@@ -596,8 +597,7 @@ class EventsServiceImplTest {
         Assertions.assertEquals(REQUEST_ACCEPTED.getValue(), dto.getTimelineElementInternal().getCategory());
         Assertions.assertEquals("paId", dto.getTimelineElementInternal().getPaId());
         Assertions.assertEquals("actual", dto.getTimelineElementInternal().getStatusInfo().getActual());
-       // Assertions.assertEquals("key", dto.getTimelineElementInternal().getLegalFactsIds().get(0).getKey());
-       // Assertions.assertEquals(LegalFactCategoryInt.DIGITAL_DELIVERY, dto.getTimelineElementInternal().getLegalFactsIds().get(0).getCategory());
+        Assertions.assertEquals("{\"key\":\"key\", \"category\":\"DIGITAL_DELIVERY\"}", dto.getTimelineElementInternal().getLegalFactsIds().get(0));
     }
 
     @Test

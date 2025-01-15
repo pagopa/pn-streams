@@ -1,95 +1,51 @@
 package it.pagopa.pn.stream.service.impl;
 
-import it.pagopa.pn.stream.dto.address.CourtesyDigitalAddressInt;
-import it.pagopa.pn.stream.dto.address.LegalDigitalAddressInt;
-import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import it.pagopa.pn.stream.dto.ConfidentialInformationEnum;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
-import it.pagopa.pn.stream.dto.timeline.details.*;
+import it.pagopa.pn.stream.exceptions.PnStreamException;
 import it.pagopa.pn.stream.service.TimelineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+
+import static it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes.ERROR_CODE_EVENT_CONFIDENTIAL_INFORMATION;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class TimeLineServiceImpl implements TimelineService {
 
+    private final ObjectMapper mapper;
+
     @Override
-    public void enrichTimelineElementWithConfidentialInformation(TimelineElementDetailsInt details,
-                                                                 ConfidentialTimelineElementDtoInt confidentialDto) {
+    public String enrichTimelineElementWithConfidentialInformation(String details, ConfidentialTimelineElementDtoInt confidentialDto) {
 
-        if (details instanceof CourtesyAddressRelatedTimelineElement courtesyAddressRelatedTimelineElement && confidentialDto.getDigitalAddress() != null) {
-            CourtesyDigitalAddressInt address = courtesyAddressRelatedTimelineElement.getDigitalAddress();
+        try {
+            var detailsJson = mapper.readValue(details, ObjectNode.class);
+            ObjectNode confidentialJson = mapper.valueToTree(confidentialDto);
 
-            address = getCourtesyDigitalAddress(confidentialDto, address);
-            ((CourtesyAddressRelatedTimelineElement) details).setDigitalAddress(address);
+            Arrays.stream(ConfidentialInformationEnum.values())
+                    .forEach(confEnum -> {
+                        ObjectNode targetNode = detailsJson;
+
+                        if (StringUtils.hasText(confEnum.getParent()) && detailsJson.has(confEnum.getParent())) {
+                            targetNode = (ObjectNode) detailsJson.get(confEnum.getParent());
+                        }
+
+                        if (targetNode.has(confEnum.getTimelineKey())) {
+                            targetNode.set(confEnum.getTimelineKey(), confidentialJson.get(confEnum.getConfidentialValue()));
+                        }
+                    });
+            return detailsJson.toString();
+
+        } catch (JsonProcessingException e) {
+            throw new PnStreamException(e.getMessage(), 500, ERROR_CODE_EVENT_CONFIDENTIAL_INFORMATION);
         }
-
-        if (details instanceof DigitalAddressRelatedTimelineElement digitalAddressRelatedTimelineElement && confidentialDto.getDigitalAddress() != null) {
-
-            LegalDigitalAddressInt address = digitalAddressRelatedTimelineElement.getDigitalAddress();
-
-            address = getDigitalAddress(confidentialDto, address);
-
-            ((DigitalAddressRelatedTimelineElement) details).setDigitalAddress(address);
-        }
-
-        if (details instanceof PhysicalAddressRelatedTimelineElement physicalAddressRelatedTimelineElement && confidentialDto.getPhysicalAddress() != null) {
-            PhysicalAddressInt physicalAddress = physicalAddressRelatedTimelineElement.getPhysicalAddress();
-
-            physicalAddress = getPhysicalAddress(physicalAddress, confidentialDto.getPhysicalAddress());
-
-            ((PhysicalAddressRelatedTimelineElement) details).setPhysicalAddress(physicalAddress);
-        }
-
-        if (details instanceof NewAddressRelatedTimelineElement newAddressRelatedTimelineElement && confidentialDto.getNewPhysicalAddress() != null) {
-
-            PhysicalAddressInt newAddress = newAddressRelatedTimelineElement.getNewAddress();
-
-            newAddress = getPhysicalAddress(newAddress, confidentialDto.getNewPhysicalAddress());
-
-            ((NewAddressRelatedTimelineElement) details).setNewAddress(newAddress);
-        }
-
-        if (details instanceof PersonalInformationRelatedTimelineElement personalInformationRelatedTimelineElement) {
-            personalInformationRelatedTimelineElement.setTaxId(confidentialDto.getTaxId());
-            personalInformationRelatedTimelineElement.setDenomination(confidentialDto.getDenomination());
-        }
-    }
-
-    private LegalDigitalAddressInt getDigitalAddress(ConfidentialTimelineElementDtoInt confidentialDto, LegalDigitalAddressInt address) {
-        if (address == null) {
-            address = LegalDigitalAddressInt.builder().build();
-        }
-
-        address = address.toBuilder().address(confidentialDto.getDigitalAddress()).build();
-        return address;
-    }
-
-    private CourtesyDigitalAddressInt getCourtesyDigitalAddress(ConfidentialTimelineElementDtoInt confidentialDto, CourtesyDigitalAddressInt address) {
-        if (address == null) {
-            address = CourtesyDigitalAddressInt.builder().build();
-        }
-
-        address = address.toBuilder().address(confidentialDto.getDigitalAddress()).build();
-        return address;
-    }
-
-    private PhysicalAddressInt getPhysicalAddress(PhysicalAddressInt physicalAddress, PhysicalAddressInt physicalAddress2) {
-        if (physicalAddress == null) {
-            physicalAddress = PhysicalAddressInt.builder().build();
-        }
-
-        return physicalAddress.toBuilder()
-                .at(physicalAddress2.getAt())
-                .address(physicalAddress2.getAddress())
-                .municipality(physicalAddress2.getMunicipality())
-                .province(physicalAddress2.getProvince())
-                .addressDetails(physicalAddress2.getAddressDetails())
-                .zip(physicalAddress2.getZip())
-                .municipalityDetails(physicalAddress2.getMunicipalityDetails())
-                .foreignState(physicalAddress2.getForeignState())
-                .build();
     }
 }
