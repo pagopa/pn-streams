@@ -381,9 +381,8 @@ Resources:
         OnFailure:
           Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
-        Filters:
-          - Pattern: !Sub '{"tableName": [${PnNotificationTableName}], "eventName": ["INSERT"]}'
-
+        { "Filters": [ { "Pattern": !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": [${PnNotificationTableName}]}' } ] }
+     
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
     Properties:
