@@ -2,14 +2,11 @@ package it.pagopa.pn.stream.service.utils;
 
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.dto.ext.delivery.notification.NotificationInt;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook.WebhookTimelineElementEntity;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.EntityToDtoWebhookTimelineMapper;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.WebhookTimelineElementJsonConverter;
-import lombok.Builder;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -35,14 +32,6 @@ public class StreamUtils {
         return entityToDtoTimelineMapper.entityToDto(timelineElementEntity);
     }
 
-
-    @Builder
-    @Getter
-    public static class RetrieveTimelineResult {
-        private String notificationStatusUpdate;
-        private TimelineElementInternal event;
-        private NotificationInt notificationInt;
-    }
 
     public static boolean checkGroups(List<String> toCheckGroups, List<String> allowedGroups){
         List<String> safeToCheck = toCheckGroups != null ? toCheckGroups : Collections.emptyList();

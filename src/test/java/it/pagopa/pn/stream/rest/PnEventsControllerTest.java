@@ -1,16 +1,17 @@
 package it.pagopa.pn.stream.rest;
 
 import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
-import it.pagopa.pn.stream.generated.openapi.server.v1.dto.*;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.CxTypeAuthFleet;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.NotificationStatusV26;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.ProgressResponseElementV26;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.TimelineElementCategoryV26;
 import it.pagopa.pn.stream.service.StreamEventsService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;

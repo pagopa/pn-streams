@@ -1,7 +1,6 @@
 package it.pagopa.pn.stream.service.impl;
 
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.exceptions.PnNotFoundException;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
 import it.pagopa.pn.stream.exceptions.PnStreamMaxStreamsCountReachedException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamCreationRequestV26;
@@ -14,7 +13,6 @@ import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.mapper.DtoToEntityStreamMapper;
 import it.pagopa.pn.stream.middleware.externalclient.pnclient.externalregistry.PnExternalRegistryClient;
 import it.pagopa.pn.stream.service.SchedulerService;
-import it.pagopa.pn.stream.service.TimelineService;
 import it.pagopa.pn.stream.service.utils.StreamUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +39,6 @@ class StreamsServiceImplTest {
     private PnStreamConfigs pnStreamConfigs;
     private SchedulerService schedulerService;
     private StreamsServiceImpl webhookService;
-    private TimelineService timelineService;
     private StreamUtils streamUtils;
     private PnExternalRegistryClient pnExternalRegistryClient;
 
@@ -53,7 +50,6 @@ class StreamsServiceImplTest {
         eventEntityDao = Mockito.mock( EventEntityDao.class );
         pnStreamConfigs = Mockito.mock( PnStreamConfigs.class );
         schedulerService = Mockito.mock(SchedulerService.class);
-        timelineService = Mockito.mock(TimelineService.class);
         streamUtils = Mockito.mock(StreamUtils.class);
         pnExternalRegistryClient = Mockito.mock(PnExternalRegistryClient.class);
 
@@ -71,7 +67,7 @@ class StreamsServiceImplTest {
         webhookService = new StreamsServiceImpl(streamEntityDao, schedulerService, pnStreamConfigs
             ,pnExternalRegistryClient);
 
-        DtoToEntityStreamMapper mapper = new DtoToEntityStreamMapper(pnStreamConfigs);
+        new DtoToEntityStreamMapper(pnStreamConfigs);
     }
 
     @Test
@@ -1032,7 +1028,6 @@ class StreamsServiceImplTest {
 
         //WHEN
         var mono = webhookService.deleteEventStream(xpagopapnuid,xpagopacxid, Collections.EMPTY_LIST,xPagopaPnApiVersion,uuidd);
-//        assertThrows(PnStreamForbiddenException.class, () -> mono.block(d));
         mono.block(d);
 
         //THEN

@@ -68,8 +68,6 @@ class EventsServiceImplTest {
     @Mock
     private ConfidentialInformationService confidentialInformationService;
 
-    private static final int CURRENT_VERSION = 26;
-
     Duration d = Duration.ofSeconds(3);
 
     @BeforeEach
@@ -596,8 +594,6 @@ class EventsServiceImplTest {
         Assertions.assertEquals(REQUEST_ACCEPTED.getValue(), dto.getTimelineElementInternal().getCategory());
         Assertions.assertEquals("paId", dto.getTimelineElementInternal().getPaId());
         Assertions.assertEquals("actual", dto.getTimelineElementInternal().getStatusInfo().getActual());
-       // Assertions.assertEquals("key", dto.getTimelineElementInternal().getLegalFactsIds().get(0).getKey());
-       // Assertions.assertEquals(LegalFactCategoryInt.DIGITAL_DELIVERY, dto.getTimelineElementInternal().getLegalFactsIds().get(0).getCategory());
     }
 
     @Test
