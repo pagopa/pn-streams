@@ -250,7 +250,7 @@ Resources:
         ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
         ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/delivery-progresses-stream/*'
+        MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
