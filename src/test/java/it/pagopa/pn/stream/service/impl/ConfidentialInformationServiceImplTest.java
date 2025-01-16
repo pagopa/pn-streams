@@ -3,11 +3,9 @@ package it.pagopa.pn.stream.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 import it.pagopa.pn.stream.dto.timeline.StatusInfoInternal;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
-import it.pagopa.pn.stream.dto.timeline.details.SendAnalogDetailsInt;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.AddressDto;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.AnalogDomicile;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.ConfidentialTimelineElementDto;
@@ -41,7 +39,7 @@ class ConfidentialInformationServiceImplTest {
     
     private TimelineElementInternal getSendPaperDetailsTimelineElement(String iun, String elementId) throws JsonProcessingException {
 
-         SendAnalogDetailsInt details =  SendAnalogDetailsInt.builder()
+      /*   SendAnalogDetailsInt details =  SendAnalogDetailsInt.builder()
                 .physicalAddress(
                         PhysicalAddressInt.builder()
                                 .province("province")
@@ -54,11 +52,11 @@ class ConfidentialInformationServiceImplTest {
                 .recIndex(0)
                 .sentAttemptMade(0)
                 .build();
-         
+         */
         return TimelineElementInternal.builder()
                 .elementId(elementId)
                 .iun(iun)
-                .details( objectMapper.writeValueAsString(details) )
+                .details( "" )
                 .build();
     }
 

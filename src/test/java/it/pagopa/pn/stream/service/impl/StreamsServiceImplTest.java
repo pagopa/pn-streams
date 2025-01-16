@@ -1,7 +1,6 @@
 package it.pagopa.pn.stream.service.impl;
 
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.exceptions.PnNotFoundException;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
 import it.pagopa.pn.stream.exceptions.PnStreamMaxStreamsCountReachedException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamCreationRequestV26;
@@ -71,7 +70,7 @@ class StreamsServiceImplTest {
         webhookService = new StreamsServiceImpl(streamEntityDao, schedulerService, pnStreamConfigs
             ,pnExternalRegistryClient);
 
-        DtoToEntityStreamMapper mapper = new DtoToEntityStreamMapper(pnStreamConfigs);
+        new DtoToEntityStreamMapper(pnStreamConfigs);
     }
 
     @Test
@@ -1032,7 +1031,6 @@ class StreamsServiceImplTest {
 
         //WHEN
         var mono = webhookService.deleteEventStream(xpagopapnuid,xpagopacxid, Collections.EMPTY_LIST,xPagopaPnApiVersion,uuidd);
-//        assertThrows(PnStreamForbiddenException.class, () -> mono.block(d));
         mono.block(d);
 
         //THEN

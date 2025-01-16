@@ -69,8 +69,6 @@ class EventsServiceImplTest {
     @Mock
     private ConfidentialInformationService confidentialInformationService;
 
-    private static final int CURRENT_VERSION = 26;
-
     Duration d = Duration.ofSeconds(3);
 
     @BeforeEach

@@ -17,6 +17,7 @@ public class PnStreamConfigs {
     private Dao dao;
     private Topics topics;
     private String dataVaultBaseUrl;
+    private String externalRegistryBaseUrl;
     private Long scheduleInterval;
     private Integer maxLength;
     private Integer purgeDeletionWaittime;
