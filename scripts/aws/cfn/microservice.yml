@@ -74,14 +74,14 @@ Parameters:
     AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
 
   HealthCheckTimeout:
-    Type: Number
-    Default: 30
     Description: Health check timeout in seconds
+    Type: Number
+    Default: 5
 
   HealthCheckInterval:
-    Type: Number
-    Default: 30
     Description: Health check interval in seconds
+    Type: Number
+    Default: 60
 
   HealthyThresholdCount:
     Type: Number
@@ -226,6 +226,31 @@ Parameters:
     Description: 'Time interval between two webhook-scans every scan send notifications
                   update to Public Administration'
 
+  ScheduledActionsQueueName:
+    Type: String
+    Description: 'Name of the queue containing scheduled actions'
+
+  ScheduledActionsQueueARN:
+    Type: String
+    Description: 'Send and pull ready-to-do actions th this queue'
+
+  ScheduledActionsQueueAlarmARN:
+    Type: String
+    Description: delivery push actions done queue dlq alarm ARN
+
+  ScheduledActionsQueueAgeAlarmARN:
+    Type: String
+    Description: delivery push actions done queue age alarm ARN
+
+  MaxStreams:
+    Type: String
+    Description: 'Max stream number'
+
+  MaxLength:
+    Type: String
+    Description: 'Max elements quantity for each webhook call'
+
+
 Resources:
 
   # pn-stream microservice
@@ -255,8 +280,15 @@ Resources:
         ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
         ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         ContainerEnvEntry3: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
+        ContainerEnvEntry4: !Sub 'PN_STREAM_TOPICS_SCHEDULEDACTIONS=${ScheduledActionsQueueName}'
+        ContainerEnvEntry5: !Sub 'PN_STREAM_MAXSTREAMS=${MaxStreams}'
+        ContainerEnvEntry6: !Sub 'PN_STREAM_MAXLENGTH=${MaxLength}'
+        ContainerEnvEntry7: !Sub 'PN_STREAM_EXTERNALREGISTRYBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry8: !Sub 'PN_STREAM_DAO_EVENTSTABLENAME=${EventsTableName}'
+        ContainerEnvEntry9: !Sub 'PN_STREAM_DAO_STREAMSTABLENAME=${StreamsTableName}'
+        ContainerEnvEntry10: 'PN_STREAM_DATAVAULTBASEURL=http://alb.confidential.pn.internal:8080'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/delivery-progresses-stream/*'
+        MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
@@ -297,7 +329,10 @@ Resources:
               - sqs:ReceiveMessage
               - sqs:SendMessage
               - sqs:SendMessageBatch
-            Resource: !Ref EventQueueARN
+            Resource:
+              - !Ref EventQueueARN
+              - !Ref ScheduledActionsQueueARN
+
 
 
   #########################################################
@@ -412,9 +447,12 @@ Resources:
           - ','
           - - !Ref EventQueueAlarmARN
             - !Ref EventQueueAgeAlarmARN
+            - !Ref ScheduledActionsQueueAlarmARN
+            - !Ref ScheduledActionsQueueAgeAlarmARN
         QueueArns: !Join
           - ','
           - - !Ref EventQueueARN
+            - !Ref ScheduledActionsQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
