@@ -74,14 +74,14 @@ Parameters:
     AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
 
   HealthCheckTimeout:
-    Type: Number
-    Default: 30
     Description: Health check timeout in seconds
+    Type: Number
+    Default: 5
 
   HealthCheckInterval:
-    Type: Number
-    Default: 30
     Description: Health check interval in seconds
+    Type: Number
+    Default: 60
 
   HealthyThresholdCount:
     Type: Number
@@ -243,6 +243,23 @@ Parameters:
     Type: String
     Description: delivery push actions done queue age alarm ARN
 
+  MaxStreams:
+    Type: String
+    Description: 'Max stream number'
+
+  MaxLength:
+    Type: String
+    Description: 'Max elements quantity for each webhook call'
+
+  RetryParameterPrefix:
+    Type: String
+    Description: 'Retry parameter prefix'
+
+  RetryAfterEnabled:
+    Type: String
+    Description: 'Allow to enable or disable retry after exception'
+    Default: 'false'
+    AllowedValues: [ true, false ]
 
 Resources:
 
@@ -274,6 +291,14 @@ Resources:
         ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         ContainerEnvEntry3: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
         ContainerEnvEntry4: !Sub 'PN_STREAM_TOPICS_SCHEDULEDACTIONS=${ScheduledActionsQueueName}'
+        ContainerEnvEntry5: !Sub 'PN_STREAM_MAXSTREAMS=${MaxStreams}'
+        ContainerEnvEntry6: !Sub 'PN_STREAM_MAXLENGTH=${MaxLength}'
+        ContainerEnvEntry7: !Sub 'PN_STREAM_EXTERNALREGISTRYBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry8: !Sub 'PN_STREAM_DAO_EVENTSTABLENAME=${EventsTableName}'
+        ContainerEnvEntry9: !Sub 'PN_STREAM_DAO_STREAMSTABLENAME=${StreamsTableName}'
+        ContainerEnvEntry10: 'PN_STREAM_DATAVAULTBASEURL=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry11: !Sub 'PN_STREAM_RETRYPARAMETERPREFIX=${RetryParameterPrefix}'
+        ContainerEnvEntry12: !Sub 'PN_STREAM_RETRYAFTERENABLED=${RetryAfterEnabled}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName

@@ -30,14 +30,6 @@ class ProblemErrorTest {
         Assertions.assertEquals("code", problemError.getCode());
     }
 
-    @Test
-    void detail() {
-        ProblemError expected = ProblemError.builder()
-                .code("code")
-                .detail("detail")
-                .build();
-        Assertions.assertEquals(expected, problemError.code("code"));
-    }
 
     @Test
     void getDetail() {

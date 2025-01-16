@@ -16,18 +16,20 @@ public class PnStreamConfigs {
 
     private Dao dao;
     private Topics topics;
-    private String dataVaultBaseUrl;
     private String externalRegistryBaseUrl;
+    private String dataVaultBaseUrl;
     private Long scheduleInterval;
     private Integer maxLength;
+    private Integer maxStreams;
     private Integer purgeDeletionWaittime;
     private Integer readBufferDelay;
-    private Integer maxStreams;
     private Integer deltaCounter;
     private Duration ttl;
     private Duration disableTtl;
     private String firstVersion;
     private String currentVersion;
+    private String retryParameterPrefix;
+    private Boolean retryAfterEnabled;
 
     @Data
     public static class Dao {

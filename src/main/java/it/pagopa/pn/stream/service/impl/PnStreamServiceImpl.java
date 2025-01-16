@@ -5,7 +5,7 @@ import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
-import it.pagopa.pn.stream.exceptions.PnWebhookTooManyRequestException;
+import it.pagopa.pn.stream.exceptions.PnTooManyRequestException;
 import it.pagopa.pn.stream.middleware.dao.dynamo.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
@@ -34,23 +34,23 @@ public abstract class PnStreamServiceImpl {
 
     protected enum StreamEntityAccessMode {READ, WRITE}
 
-    protected Mono<StreamEntity> getStreamEntityToWrite(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId) {
-        return getStreamEntityToWrite(xPagopaPnApiVersion, xPagopaPnCxId, xPagopaPnCxGroups, streamId, false)
+    protected Mono<StreamEntity> getStreamEntityToWrite(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId, boolean checkRetryAfter) {
+        return getStreamEntityToWrite(xPagopaPnApiVersion, xPagopaPnCxId, xPagopaPnCxGroups, streamId, false, checkRetryAfter)
             ;
     }
-    protected Mono<StreamEntity> getStreamEntityToWrite(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId, boolean ignoreVersion) {
-        return filterEntity(xPagopaPnApiVersion, xPagopaPnCxId, xPagopaPnCxGroups, streamId, StreamEntityAccessMode.WRITE, ignoreVersion)
+    protected Mono<StreamEntity> getStreamEntityToWrite(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId, boolean ignoreVersion, boolean checkRetryAfter) {
+        return filterEntity(xPagopaPnApiVersion, xPagopaPnCxId, xPagopaPnCxGroups, streamId, StreamEntityAccessMode.WRITE, ignoreVersion, checkRetryAfter)
             .filter(entity -> !(CollectionUtils.isEmpty(entity.getGroups()) && !CollectionUtils.isEmpty(xPagopaPnCxGroups))
             || apiVersion(xPagopaPnApiVersion).equals(pnStreamConfigs.getFirstVersion()) //Se e' v10 non ho vincoli
             || ignoreVersion
             );
     }
 
-    private Mono<StreamEntity> filterEntity(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId, StreamEntityAccessMode mode, boolean ignoreVersion) {
+    private Mono<StreamEntity> filterEntity(String xPagopaPnApiVersion, String xPagopaPnCxId, List<String> xPagopaPnCxGroups, UUID streamId, StreamEntityAccessMode mode, boolean ignoreVersion, boolean checkRetryAfter) {
         final String apiV10 = pnStreamConfigs.getFirstVersion();
         return streamEntityDao.getWithRetryAfter(xPagopaPnCxId, streamId.toString())
                 .doOnNext(tuple -> {
-                    if (tuple.getT2().isPresent())
+                    if (checkRetryAfter && tuple.getT2().isPresent())
                         checkRetryAfter(xPagopaPnCxId, xPagopaPnApiVersion, streamId, tuple.getT2().get());
                 })
                 .map(Tuple2::getT1)
@@ -72,7 +72,11 @@ public abstract class PnStreamServiceImpl {
 
     private void checkRetryAfter(String xPagopaPnCxId, String xPagopaPnApiVersion, UUID streamId, WebhookStreamRetryAfter entityRetry) {
         if (Instant.now().isBefore(entityRetry.getRetryAfter())) {
-            throw new PnWebhookTooManyRequestException("Pa " + xPagopaPnCxId + " version " + apiVersion(xPagopaPnApiVersion) + " is trying to access streamId " + streamId + ": retry after not expired");
+            log.warn("Pa {} version {} is trying to access streamId {}: retry after not expired",
+                    xPagopaPnCxId, apiVersion(xPagopaPnApiVersion), streamId);
+            if(Boolean.TRUE.equals(pnStreamConfigs.getRetryAfterEnabled())){
+                throw new PnTooManyRequestException("Pa " + xPagopaPnCxId + " version " + apiVersion(xPagopaPnApiVersion) + " is trying to access streamId " + streamId + ": retry after not expired");
+            }
         }
     }
 

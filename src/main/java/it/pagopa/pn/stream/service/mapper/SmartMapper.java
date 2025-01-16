@@ -27,7 +27,6 @@ public class SmartMapper {
         modelMapper.createTypeMap(TimelineElementInternal.class, TimelineElementInternal.class);
 
         List<BiFunction> postMappingTransformers = new ArrayList<>();
-        postMappingTransformers.add( (source, result)-> result);
 
         postMappingTransformer =  postMappingTransformers.stream()
                 .reduce((f, g) -> (i, s) -> f.apply(i, g.apply(i, s)))

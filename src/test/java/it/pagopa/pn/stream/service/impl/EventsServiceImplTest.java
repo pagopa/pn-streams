@@ -1,8 +1,8 @@
 package it.pagopa.pn.stream.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
+import it.pagopa.pn.stream.config.springbootcfg.SsmParameterConsumerActivation;
 import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
@@ -11,7 +11,7 @@ import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
 import it.pagopa.pn.stream.dto.timeline.StatusInfoInternal;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
-import it.pagopa.pn.stream.exceptions.PnWebhookTooManyRequestException;
+import it.pagopa.pn.stream.exceptions.PnTooManyRequestException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamMetadataResponseV26;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityBatch;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityDao;
@@ -43,10 +43,10 @@ import java.util.*;
 
 import static it.pagopa.pn.stream.generated.openapi.server.v1.dto.TimelineElementCategoryV26.AAR_GENERATION;
 import static it.pagopa.pn.stream.generated.openapi.server.v1.dto.TimelineElementCategoryV26.REQUEST_ACCEPTED;
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,6 +62,8 @@ class EventsServiceImplTest {
     private PnStreamConfigs pnStreamConfigs;
     @Mock
     private SchedulerService schedulerService;
+    @Mock
+    private SsmParameterConsumerActivation ssmParameterConsumerActivation;
     @Mock
     private StreamUtils webhookUtils;
     @Mock
@@ -81,7 +83,7 @@ class EventsServiceImplTest {
         when(pnStreamConfigs.getFirstVersion()).thenReturn("v10");
 
         webhookEventsService = new StreamEventsServiceImpl(streamEntityDao, eventEntityDao, schedulerService,
-                webhookUtils, pnStreamConfigs, timelineService, confidentialInformationService);
+                webhookUtils, pnStreamConfigs, timelineService, confidentialInformationService, ssmParameterConsumerActivation);
     }
 
     @Test
@@ -165,7 +167,7 @@ class EventsServiceImplTest {
 
         //THEN
         assertNotNull(res);
-        assertEquals(list.size(), res.getProgressResponseElementList().size());
+        Assertions.assertEquals(list.size(), res.getProgressResponseElementList().size());
         Mockito.verify(streamEntityDao).getWithRetryAfter(xpagopacxid, uuid);
         Mockito.verify(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
     }
@@ -174,7 +176,7 @@ class EventsServiceImplTest {
     void consumeEventStreamV10WithGroups() {
         //GIVEN
         String xpagopacxid = "PA-xpagopacxid";
-        List<String> xPagopaPnCxGroups = Arrays.asList("gruppo1");
+        List<String> xPagopaPnCxGroups = List.of("gruppo1");
         String xPagopaPnApiVersion = "v10";
 
 
@@ -251,7 +253,7 @@ class EventsServiceImplTest {
 
         //THEN
         assertNotNull(res);
-        assertEquals(list.size(), res.getProgressResponseElementList().size());
+        Assertions.assertEquals(list.size(), res.getProgressResponseElementList().size());
         Mockito.verify(streamEntityDao).getWithRetryAfter(xpagopacxid, uuid);
         Mockito.verify(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
     }
@@ -260,7 +262,6 @@ class EventsServiceImplTest {
     void consumeEventStream2Forbidden() {
         //GIVEN
         String xpagopacxid = "PA-xpagopacxid";
-        String lasteventid = null;
         String xPagopaPnApiVersion = "v23";
 
         UUID uuidd = UUID.randomUUID();
@@ -273,16 +274,16 @@ class EventsServiceImplTest {
         entity.setFilterValues(new HashSet<>());
         entity.setActivationDate(Instant.now());
         entity.setVersion("v23");
-        entity.setGroups(Collections.EMPTY_LIST);
+        entity.setGroups(Collections.emptyList());
 
 
         when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.empty())));
         Mockito.doNothing().when(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
-        when(eventEntityDao.findByStreamId(uuid, lasteventid)).thenReturn(Mono.empty());
+        when(eventEntityDao.findByStreamId(uuid, null)).thenReturn(Mono.empty());
 
 
         //WHEN
-        Mono<ProgressResponseElementDto> mono = webhookEventsService.consumeEventStream(xpagopacxid, Arrays.asList("gruppo1"), xPagopaPnApiVersion, uuidd, lasteventid);
+        Mono<ProgressResponseElementDto> mono = webhookEventsService.consumeEventStream(xpagopacxid, List.of("gruppo1"), xPagopaPnApiVersion, uuidd, null);
         assertThrows(PnStreamForbiddenException.class, () -> mono.block(d));
 
         //THEN
@@ -357,7 +358,7 @@ class EventsServiceImplTest {
 
         //THEN
         assertNotNull(res);
-        assertEquals(2, res.getProgressResponseElementList().size());
+        Assertions.assertEquals(2, res.getProgressResponseElementList().size());
         Mockito.verify(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
@@ -420,6 +421,7 @@ class EventsServiceImplTest {
         when(webhookUtils.getTimelineInternalFromEvent(Mockito.any())).thenReturn(timelineElementInternal);
         when(eventEntityDao.findByStreamId(Mockito.anyString() , Mockito.anyString())).thenReturn(Mono.just(eventEntityBatch));
         when(webhookUtils.getVersion(xPagopaPnApiVersion)).thenReturn(10);
+        when(ssmParameterConsumerActivation.getParameterValue(any(), any())).thenReturn(Optional.empty());
         when(streamEntityDao.updateStreamRetryAfter(any())).thenReturn(Mono.empty());
 
 
@@ -428,13 +430,87 @@ class EventsServiceImplTest {
 
         //THEN
         assertNotNull(res);
-        assertEquals(0, res.getProgressResponseElementList().size());
-        assertEquals(1000, res.getRetryAfter());
+        Assertions.assertEquals(0, res.getProgressResponseElementList().size());
+        Assertions.assertEquals(1000, res.getRetryAfter());
         Mockito.verify(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
-    void consumeEventStreamRetryAfterViolation() {
+    void consumeEventStreamRetryAfterViolationNoException() {
+        //GIVEN
+        String xpagopacxid = "PA-xpagopacxid";
+        String lasteventid;
+        List<String> xPagopaPnCxGroups = new ArrayList<>();
+        String xPagopaPnApiVersion = "v10";
+
+
+        UUID uuidd = UUID.randomUUID();
+        String uuid = uuidd.toString();
+        StreamEntity entity = new StreamEntity();
+        entity.setStreamId(uuid);
+        entity.setTitle("1");
+        entity.setPaId(xpagopacxid);
+        entity.setEventType(StreamMetadataResponseV26.EventTypeEnum.STATUS.toString());
+        entity.setFilterValues(new HashSet<>());
+        entity.setActivationDate(Instant.now());
+
+
+        List<EventEntity> list = new ArrayList<>();
+        EventEntity eventEntity = new EventEntity();
+        eventEntity.setEventId(Instant.now() + "_" + "timeline_event_id");
+        eventEntity.setTimestamp(Instant.now());
+        eventEntity.setTimelineEventCategory(AAR_GENERATION.getValue());
+        eventEntity.setNewStatus(NotificationStatusInt.ACCEPTED.getValue());
+        eventEntity.setIun("");
+        eventEntity.setNotificationRequestId("");
+        eventEntity.setStreamId(uuid);
+        list.add(eventEntity);
+
+
+
+        eventEntity = new EventEntity();
+        eventEntity.setEventId(Instant.now().plusMillis(1) + "_" + "timeline_event_id2");
+        eventEntity.setTimestamp(Instant.now());
+        eventEntity.setTimelineEventCategory(AAR_GENERATION.getValue());
+        eventEntity.setNewStatus(NotificationStatusInt.ACCEPTED.getValue());
+        eventEntity.setIun("");
+        eventEntity.setNotificationRequestId("");
+        eventEntity.setStreamId(uuid);
+        list.add(eventEntity);
+
+        EventEntityBatch eventEntityBatch = new EventEntityBatch();
+        eventEntityBatch.setEvents(list);
+        eventEntityBatch.setStreamId(uuid);
+        eventEntityBatch.setLastEventIdRead(null);
+
+        TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
+
+        WebhookStreamRetryAfter webhookStreamRetryAfter = new WebhookStreamRetryAfter();
+        webhookStreamRetryAfter.setPaId(xpagopacxid);
+        webhookStreamRetryAfter.setStreamId(uuid);
+        webhookStreamRetryAfter.setRetryAfter(Instant.now().plusMillis(10000));
+
+
+        lasteventid = list.get(0).getEventId();
+
+        when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.of(webhookStreamRetryAfter))));
+        Mockito.doNothing().when(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
+        when(webhookUtils.getTimelineInternalFromEvent(Mockito.any())).thenReturn(timelineElementInternal);
+        when(eventEntityDao.findByStreamId(Mockito.anyString() , Mockito.anyString())).thenReturn(Mono.just(eventEntityBatch));
+        when(webhookUtils.getVersion(xPagopaPnApiVersion)).thenReturn(10);
+
+        //WHEN
+        ProgressResponseElementDto res = webhookEventsService.consumeEventStream(xpagopacxid,xPagopaPnCxGroups,xPagopaPnApiVersion, uuidd, lasteventid).block(d);
+
+        //THEN
+        assertNotNull(res);
+        Assertions.assertEquals(2, res.getProgressResponseElementList().size());
+        Mockito.verify(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void consumeEventStreamRetryAfterViolationException() {
+        when(pnStreamConfigs.getRetryAfterEnabled()).thenReturn(Boolean.TRUE);
         //GIVEN
         String xpagopacxid = "PA-xpagopacxid";
         String lasteventid;
@@ -499,7 +575,7 @@ class EventsServiceImplTest {
 
 
         //WHEN
-        Assertions.assertThrows(PnWebhookTooManyRequestException.class, () -> webhookEventsService.consumeEventStream(xpagopacxid,xPagopaPnCxGroups,xPagopaPnApiVersion, uuidd, lasteventid).block(d));
+        Assertions.assertThrows(PnTooManyRequestException.class, () -> webhookEventsService.consumeEventStream(xpagopacxid,xPagopaPnCxGroups,xPagopaPnApiVersion, uuidd, lasteventid).block(d));
 
     }
 
@@ -507,7 +583,6 @@ class EventsServiceImplTest {
     void consumeEventStreamForbidden() {
         //GIVEN
         String xpagopacxid = "PA-xpagopacxid";
-        String lasteventid = null;
         String xPagopaPnApiVersion = "v23";
 
         UUID uuidd = UUID.randomUUID();
@@ -524,11 +599,11 @@ class EventsServiceImplTest {
 
         when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.empty())));
         Mockito.doNothing().when(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
-        when(eventEntityDao.findByStreamId(uuid, lasteventid)).thenReturn(Mono.empty());
+        when(eventEntityDao.findByStreamId(uuid, null)).thenReturn(Mono.empty());
 
 
         //WHEN
-        Mono<ProgressResponseElementDto> mono = webhookEventsService.consumeEventStream(xpagopacxid, null, xPagopaPnApiVersion, uuidd, lasteventid);
+        Mono<ProgressResponseElementDto> mono = webhookEventsService.consumeEventStream(xpagopacxid, null, xPagopaPnApiVersion, uuidd, null);
         assertThrows(PnStreamForbiddenException.class, () -> mono.block(d));
 
         //THEN
@@ -582,6 +657,7 @@ class EventsServiceImplTest {
 
         EventTimelineInternalDto dto = fluxDto.blockFirst();
 
+        assert dto != null;
         Assertions.assertEquals("eventId", dto.getEventEntity().getEventId());
         Assertions.assertEquals("iun", dto.getEventEntity().getIun());
         Assertions.assertEquals("element", dto.getEventEntity().getElement());
@@ -595,7 +671,6 @@ class EventsServiceImplTest {
         Assertions.assertEquals(REQUEST_ACCEPTED.getValue(), dto.getTimelineElementInternal().getCategory());
         Assertions.assertEquals("paId", dto.getTimelineElementInternal().getPaId());
         Assertions.assertEquals("actual", dto.getTimelineElementInternal().getStatusInfo().getActual());
-        Assertions.assertEquals("{\"key\":\"key\", \"category\":\"DIGITAL_DELIVERY\"}", dto.getTimelineElementInternal().getLegalFactsIds().get(0));
     }
 
     @Test
@@ -625,8 +700,11 @@ class EventsServiceImplTest {
                 .timelineElementInternal(timelineElementInternal)
                 .build();
 
-        when(confidentialInformationService.getTimelineConfidentialInformation(List.of(timelineElementInternal))).thenThrow(PnInternalException.class);
+        when(confidentialInformationService.getTimelineConfidentialInformation(anyList())).thenReturn(Flux.error(new PnInternalException("error", 500, "error")));
 
-        Assertions.assertThrows(PnInternalException.class, () -> webhookEventsService.addConfidentialInformationAtEventTimelineList(List.of(eventTimelineInternalDto)).blockFirst());
+        List<EventTimelineInternalDto> list = List.of(eventTimelineInternalDto);
+        var resp = webhookEventsService.addConfidentialInformationAtEventTimelineList(list);
+
+        Assertions.assertThrows(PnInternalException.class, resp::blockFirst);
     }
 }

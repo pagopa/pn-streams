@@ -92,7 +92,7 @@ public class StreamsServiceImpl extends PnStreamServiceImpl implements StreamsSe
 
         generateAuditLog(PnAuditLogEventType.AUD_WH_DELETE, msg, args).log();
 
-        return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId)
+        return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId, false)
                 .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Cannot delete Stream")))
                 .flatMap(filteredEntity ->
                         streamEntityDao.delete(xPagopaPnCxId, streamId.toString())
@@ -144,7 +144,7 @@ public class StreamsServiceImpl extends PnStreamServiceImpl implements StreamsSe
                     values.add(payload.toString());
                     generateAuditLog(PnAuditLogEventType.AUD_WH_UPDATE, msg, values.toArray(new String[0])).log();
                 })
-                .flatMap(request -> getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId)
+                .flatMap(request -> getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId, false)
                         .filter(filterUpdateRequest(xPagopaPnUid, xPagopaPnCxId, xPagopaPnCxGroups, request))
                         .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Not supported operation, groups cannot be removed")))
                         .map(r -> DtoToEntityStreamMapper.dtoToEntity(xPagopaPnCxId, streamId.toString(), xPagopaPnApiVersion, request))
@@ -197,7 +197,7 @@ public class StreamsServiceImpl extends PnStreamServiceImpl implements StreamsSe
         String[] args = new String[]{xPagopaPnCxId, groupString(xPagopaPnCxGroups), xPagopaPnApiVersion};
         generateAuditLog(PnAuditLogEventType.AUD_WH_DISABLE, msg, args).log();
 
-        return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId)
+        return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId, false)
                 .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Not supported operation, stream not owned")))
                 .filter(streamEntity -> streamEntity.getDisabledDate() == null)
                 .switchIfEmpty(
@@ -227,7 +227,7 @@ public class StreamsServiceImpl extends PnStreamServiceImpl implements StreamsSe
         String msg = "disableEventStream xPagopaPnCxId={}, xPagopaPnCxGroups={}, xPagopaPnApiVersion={}, disabledStreamId={}";
         String[] args = new String[]{xPagopaPnCxId, groupString(xPagopaPnCxGroups), xPagopaPnApiVersion, dto.getReplacedStreamId().toString()};
         generateAuditLog(PnAuditLogEventType.AUD_WH_DISABLE, msg, args).log();
-        return getStreamEntityToWrite(xPagopaPnApiVersion, xPagopaPnCxId, xPagopaPnCxGroups, dto.getReplacedStreamId(), true).
+        return getStreamEntityToWrite(xPagopaPnApiVersion, xPagopaPnCxId, xPagopaPnCxGroups, dto.getReplacedStreamId(), false).
                 flatMap(replacedStream -> replaceStreamEntity(streamEntity, replacedStream))
                 .doOnSuccess(newEntity -> generateAuditLog(PnAuditLogEventType.AUD_WH_DISABLE, msg, args).generateSuccess().log())
                 .doOnError(err -> generateAuditLog(PnAuditLogEventType.AUD_WH_DISABLE, msg, args).generateFailure(ERROR_CREATING_STREAM, err).log());
