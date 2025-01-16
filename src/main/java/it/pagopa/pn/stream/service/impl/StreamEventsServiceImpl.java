@@ -178,7 +178,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                             .filter(i -> i.getElementId().equals(confidentialInfo.getTimelineElementId()))
                             .findFirst()
                             .get();
-                   //TODO: FIX timelineService.enrichTimelineElementWithConfidentialInformation(internal.getDetails(), confidentialInfo);
+                    timelineService.enrichTimelineElementWithConfidentialInformation(internal.getDetails(), confidentialInfo);
                     return internal;
                 })
                 .collectList()

@@ -14,6 +14,6 @@ public class TimeLineServiceImpl implements TimelineService {
     @Override
     public void enrichTimelineElementWithConfidentialInformation(Object details,
                                                                  ConfidentialTimelineElementDtoInt confidentialDto) {
-
+        log.info("enrichTimelineElementWithConfidentialInformation");
     }
 }

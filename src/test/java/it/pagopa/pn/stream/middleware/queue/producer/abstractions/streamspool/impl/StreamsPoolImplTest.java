@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 class StreamsPoolImplTest {
@@ -56,13 +55,6 @@ class StreamsPoolImplTest {
     }
 
     private static <T> ArgumentMatcher<T> matches(Predicate<T> predicate) {
-        return new ArgumentMatcher<T>() {
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public boolean matches(Object argument) {
-                return predicate.test((T) argument);
-            }
-        };
+        return predicate::test;
     }
 }
