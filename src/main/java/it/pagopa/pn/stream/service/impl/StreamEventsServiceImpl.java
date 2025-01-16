@@ -3,6 +3,8 @@ package it.pagopa.pn.stream.service.impl;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
+import it.pagopa.pn.stream.config.springbootcfg.SsmParameterConsumerActivation;
+import it.pagopa.pn.stream.dto.stream.CustomRetryAfterParameter;
 import it.pagopa.pn.stream.dto.stream.EventTimelineInternalDto;
 import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
@@ -43,17 +45,21 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     private final TimelineService timelineService;
     private final ConfidentialInformationService confidentialInformationService;
 
+    private final SsmParameterConsumerActivation ssmParameterConsumerActivation;
+
 
     public StreamEventsServiceImpl(StreamEntityDao streamEntityDao, EventEntityDao eventEntityDao,
                                    SchedulerService schedulerService, StreamUtils streamUtils,
                                    PnStreamConfigs pnStreamConfigs, TimelineService timeLineService,
-                                   ConfidentialInformationService confidentialInformationService) {
+                                   ConfidentialInformationService confidentialInformationService,
+                                   SsmParameterConsumerActivation ssmParameterConsumerActivation) {
         super(streamEntityDao, pnStreamConfigs);
         this.eventEntityDao = eventEntityDao;
         this.schedulerService = schedulerService;
         this.streamUtils = streamUtils;
         this.timelineService = timeLineService;
         this.confidentialInformationService = confidentialInformationService;
+        this.ssmParameterConsumerActivation = ssmParameterConsumerActivation;
     }
 
     @Override
@@ -66,7 +72,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         String[] args = {xPagopaPnCxId, groupString(xPagopaPnCxGroups), xPagopaPnApiVersion, streamId.toString()};
         generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).log();
         // grazie al contatore atomico usato in scrittura per generare l'eventId, non serve più gestire la finestra.
-        return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId)
+        return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId, true)
             .doOnError(error -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateFailure("Error in reading stream").log())
             .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Cannot consume stream")))
             .flatMap(stream -> eventEntityDao.findByStreamId(stream.getStreamId(), lastEventId))
@@ -114,8 +120,14 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         WebhookStreamRetryAfter retryAfterEntity = new WebhookStreamRetryAfter();
         retryAfterEntity.setPaId(xPagopaPnCxId);
         retryAfterEntity.setStreamId(streamId.toString());
-        retryAfterEntity.setRetryAfter(Instant.now().plusMillis(pnStreamConfigs.getScheduleInterval()));
+        retryAfterEntity.setRetryAfter(retrieveRetryAfter(xPagopaPnCxId));
         return retryAfterEntity;
+    }
+
+    private Instant retrieveRetryAfter(String xPagopaPnCxId) {
+        return ssmParameterConsumerActivation.getParameterValue(pnStreamConfigs.getRetryParameterPrefix() + xPagopaPnCxId, CustomRetryAfterParameter.class)
+                .map(customRetryAfterParameter -> Instant.now().plusMillis(customRetryAfterParameter.getRetryAfter()))
+                .orElse(Instant.now().plusMillis(pnStreamConfigs.getScheduleInterval()));
     }
 
     private ProgressResponseElementV26 getProgressResponseFromEventTimeline(EventTimelineInternalDto eventTimeline) {

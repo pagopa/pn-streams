@@ -2,6 +2,7 @@ package it.pagopa.pn.stream.service.impl;
 
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
+import it.pagopa.pn.stream.config.springbootcfg.SsmParameterConsumerActivation;
 import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
@@ -62,6 +63,8 @@ class EventsServiceImplTest {
     @Mock
     private SchedulerService schedulerService;
     @Mock
+    private SsmParameterConsumerActivation ssmParameterConsumerActivation;
+    @Mock
     private StreamUtils webhookUtils;
     @Mock
     private TimelineService timelineService;
@@ -80,7 +83,7 @@ class EventsServiceImplTest {
         when(pnStreamConfigs.getFirstVersion()).thenReturn("v10");
 
         webhookEventsService = new StreamEventsServiceImpl(streamEntityDao, eventEntityDao, schedulerService,
-                webhookUtils, pnStreamConfigs, timelineService, confidentialInformationService);
+                webhookUtils, pnStreamConfigs, timelineService, confidentialInformationService, ssmParameterConsumerActivation);
     }
 
     @Test
@@ -419,6 +422,7 @@ class EventsServiceImplTest {
         when(webhookUtils.getTimelineInternalFromEvent(Mockito.any())).thenReturn(timelineElementInternal);
         when(eventEntityDao.findByStreamId(Mockito.anyString() , Mockito.anyString())).thenReturn(Mono.just(eventEntityBatch));
         when(webhookUtils.getVersion(xPagopaPnApiVersion)).thenReturn(10);
+        when(ssmParameterConsumerActivation.getParameterValue(any(), any())).thenReturn(Optional.empty());
         when(streamEntityDao.updateStreamRetryAfter(any())).thenReturn(Mono.empty());
 
 
