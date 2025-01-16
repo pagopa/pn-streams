@@ -11,7 +11,6 @@ import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
 import it.pagopa.pn.stream.dto.timeline.StatusInfoInternal;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
-import it.pagopa.pn.stream.exceptions.PnWebhookTooManyRequestException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamMetadataResponseV26;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityBatch;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityDao;
@@ -500,10 +499,13 @@ class EventsServiceImplTest {
         when(eventEntityDao.findByStreamId(Mockito.anyString() , Mockito.anyString())).thenReturn(Mono.just(eventEntityBatch));
         when(webhookUtils.getVersion(xPagopaPnApiVersion)).thenReturn(10);
 
-
         //WHEN
-        Assertions.assertThrows(PnWebhookTooManyRequestException.class, () -> webhookEventsService.consumeEventStream(xpagopacxid,xPagopaPnCxGroups,xPagopaPnApiVersion, uuidd, lasteventid).block(d));
+        ProgressResponseElementDto res = webhookEventsService.consumeEventStream(xpagopacxid,xPagopaPnCxGroups,xPagopaPnApiVersion, uuidd, lasteventid).block(d);
 
+        //THEN
+        assertNotNull(res);
+        assertEquals(2, res.getProgressResponseElementList().size());
+        Mockito.verify(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     @Test
