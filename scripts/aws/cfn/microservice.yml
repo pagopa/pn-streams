@@ -50,7 +50,7 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-
+  
   
   Version:
     Type: String
