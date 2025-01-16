@@ -226,6 +226,23 @@ Parameters:
     Description: 'Time interval between two webhook-scans every scan send notifications
                   update to Public Administration'
 
+  ScheduledActionsQueueName:
+    Type: String
+    Description: 'Name of the queue containing scheduled actions'
+
+  ScheduledActionsQueueARN:
+    Type: String
+    Description: 'Send and pull ready-to-do actions th this queue'
+
+  ScheduledActionsQueueAlarmARN:
+    Type: String
+    Description: delivery push actions done queue dlq alarm ARN
+
+  ScheduledActionsQueueAgeAlarmARN:
+    Type: String
+    Description: delivery push actions done queue age alarm ARN
+
+
 Resources:
 
   # pn-stream microservice
@@ -255,6 +272,7 @@ Resources:
         ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
         ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
         ContainerEnvEntry3: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
+        ContainerEnvEntry4: !Sub 'PN_STREAM_TOPICS_SCHEDULEDACTIONS=${ScheduledActionsQueueName}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/*'
         ECSClusterName: !Ref ECSClusterName
@@ -297,7 +315,10 @@ Resources:
               - sqs:ReceiveMessage
               - sqs:SendMessage
               - sqs:SendMessageBatch
-            Resource: !Ref EventQueueARN
+            Resource:
+              - !Ref EventQueueARN
+              - !Ref ScheduledActionsQueueARN
+
 
 
   #########################################################
@@ -412,9 +433,12 @@ Resources:
           - ','
           - - !Ref EventQueueAlarmARN
             - !Ref EventQueueAgeAlarmARN
+            - !Ref ScheduledActionsQueueAlarmARN
+            - !Ref ScheduledActionsQueueAgeAlarmARN
         QueueArns: !Join
           - ','
           - - !Ref EventQueueARN
+            - !Ref ScheduledActionsQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
