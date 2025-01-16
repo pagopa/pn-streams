@@ -74,14 +74,14 @@ Parameters:
     AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
 
   HealthCheckTimeout:
-    Type: Number
-    Default: 30
     Description: Health check timeout in seconds
+    Type: Number
+    Default: 5
 
   HealthCheckInterval:
-    Type: Number
-    Default: 30
     Description: Health check interval in seconds
+    Type: Number
+    Default: 60
 
   HealthyThresholdCount:
     Type: Number
