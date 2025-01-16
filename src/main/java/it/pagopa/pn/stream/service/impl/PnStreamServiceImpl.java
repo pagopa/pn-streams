@@ -5,6 +5,7 @@ import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
+import it.pagopa.pn.stream.exceptions.PnTooManyRequestException;
 import it.pagopa.pn.stream.middleware.dao.dynamo.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
@@ -73,6 +74,9 @@ public abstract class PnStreamServiceImpl {
         if (Instant.now().isBefore(entityRetry.getRetryAfter())) {
             log.warn("Pa {} version {} is trying to access streamId {}: retry after not expired",
                     xPagopaPnCxId, apiVersion(xPagopaPnApiVersion), streamId);
+            if(Boolean.TRUE.equals(pnStreamConfigs.getRetryAfterEnabled())){
+                throw new PnTooManyRequestException("Pa " + xPagopaPnCxId + " version " + apiVersion(xPagopaPnApiVersion) + " is trying to access streamId " + streamId + ": retry after not expired");
+            }
         }
     }
 

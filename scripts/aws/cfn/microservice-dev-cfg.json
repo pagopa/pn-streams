@@ -11,6 +11,7 @@
     "ScheduleInterval": "60000",
     "MaxLength": "50",
     "MaxStreams": "10",
-    "RetryParameterPrefix": "/pn-stream/retry/"
+    "RetryParameterPrefix": "/pn-stream/retry/",
+    "RetryAfterEnabled": "false"
   }
 }

@@ -29,6 +29,7 @@ public class PnStreamConfigs {
     private String firstVersion;
     private String currentVersion;
     private String retryParameterPrefix;
+    private Boolean retryAfterEnabled;
 
     @Data
     public static class Dao {
