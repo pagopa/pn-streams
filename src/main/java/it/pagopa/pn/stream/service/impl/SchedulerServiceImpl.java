@@ -15,7 +15,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final StreamsPool streamsPool;
     
     @Override
-    public void scheduleWebhookEvent(String streamId, String eventId, Integer delay, StreamEventType actionType) {
+    public void scheduleStreamEvent(String streamId, String eventId, Integer delay, StreamEventType actionType) {
         StreamAction action = StreamAction.builder()
                 .streamId(streamId)
                 .eventId(eventId)
