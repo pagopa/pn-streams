@@ -130,7 +130,6 @@ Parameters:
     Description: Log alarm strategy
     Default: 'FATAL'
 
-
   NotificationStreamManagerLambdaName:
     Type: String
 
@@ -174,7 +173,17 @@ Parameters:
     Default: 20
     Description: Batching window size for lambda triggering
 
+  StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
+    Type: Number
+    Default: 20
+    Description: Batching window size for lambda triggering
+
   NotificationStreamManagerLambdaBatchSize:
+    Type: Number
+    Default: 60
+    Description: Batch size for lambda triggering
+
+  StreamEventManagerLambdaBatchSize:
     Type: Number
     Default: 60
     Description: Batch size for lambda triggering
@@ -259,6 +268,25 @@ Parameters:
     Type: String
     Description: 'Max elements quantity for each webhook call'
 
+  StreamEventManagerLambdaName:
+    Type: String
+    Description: 'Name of the lambda function that manages the stream events'
+
+  StreamInternalQueueURL:
+    Type: String
+    Description: 'URL of the queue containing internal actions'
+
+  StreamInternalQueueName:
+    Type: String
+    Description: 'Name of the queue containing internal actions'
+
+  StreamInternalQueueARN:
+    Type: String
+    Description: 'ARN of the queue containing internal actions'
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'ARN of the DLQ queue for stream event manager lambda'
 
 Resources:
 
@@ -362,7 +390,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          QUEUE_URL: !Ref DoneActionsQueueURL
+          QUEUE_URL: !Ref StreamInternalQueueURL
           START_READ_STREAM_TIMESTAMP: !Sub '${StartReadStreamTimestamp}'
           STOP_READ_STREAM_TIMESTAMP: !Sub '${StopReadStreamTimestamp}'
       TracingConfig:
@@ -418,7 +446,7 @@ Resources:
               - sqs:GetQueueUrl
               - sqs:SendMessage
             Resource:
-              !Ref DoneActionsQueueARN
+              !Ref StreamInternalQueueARN
           - Effect: Allow
             Action:
               - sqs:ChangeMessageVisibility
