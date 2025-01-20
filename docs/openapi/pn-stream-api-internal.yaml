@@ -348,7 +348,7 @@ paths:
     ############################################################################################
     ###                        CREAZIONE E CANCELLAZIONE STREAM EVENTI                       ###
     ############################################################################################
-  '/delivery-progresses/v2.6/streams':
+  '/delivery-progresses-2/v2.6/streams':
     parameters:                                               # NO EXTERNAL
       - $ref: '#/components/parameters/uidAuthFleet'          # NO EXTERNAL
       - $ref: '#/components/parameters/cxTypeAuthFleet'       # NO EXTERNAL
@@ -435,7 +435,7 @@ paths:
     ############################################################################################
     ###                        lEGGI METADATA DELLO STREAM                                   ###
     ############################################################################################
-  '/delivery-progresses/v2.6/streams/{streamId}':
+  '/delivery-progresses-2/v2.6/streams/{streamId}':
     parameters:
       - $ref: '#/components/parameters/uidAuthFleet'          # NO EXTERNAL
       - $ref: '#/components/parameters/cxTypeAuthFleet'       # NO EXTERNAL
@@ -567,7 +567,7 @@ paths:
   ###                             DISABILITARE UNO STREAM                                  ###
   ############################################################################################
 
-  '/delivery-progresses/v2.6/streams/{streamId}/action/disable':
+  '/delivery-progresses-2/v2.6/streams/{streamId}/action/disable':
     post:
       summary: Disabilita uno stream
       description: >-
@@ -629,7 +629,7 @@ paths:
     ###                             LETTURA EVENTI DA UNO STREAM                             ###
     ############################################################################################
 
-  '/delivery-progresses/v2.6/streams/{streamId}/events':
+  '/delivery-progresses-2/v2.6/streams/{streamId}/events':
     get:
       summary: Leggi progressi notifiche
       description: >-
@@ -705,7 +705,7 @@ paths:
     ###                INVIO DI EVENTI DA PARTE DELLA PUBBLICA AMMNISTRAZIONE                ###
     ############################################################################################
 
-  '/delivery-progresses/events':                                                              # NOT YET IMPLEMENTED
+  '/delivery-progresses-2/events':                                                              # NOT YET IMPLEMENTED
     post:                                                                                     # NOT YET IMPLEMENTED
       summary: Invio eventi da parte della PA                                                 # NOT YET IMPLEMENTED
       description: >-                                                                         # NOT YET IMPLEMENTED

@@ -65,6 +65,37 @@ public class StreamEntityDaoDynamo implements StreamEntityDao {
     }
 
     @Override
+    public Mono<Tuple2<StreamEntity, Optional<WebhookStreamRetryAfter>>> getWithRetryAfter(String paId, String streamId) {
+        log.info("getWithRetryAfter paId={} streamId={}", paId, streamId);
+        Key hashKey = Key.builder().partitionValue(paId).sortValue(streamId).build();
+        Key retryHashKey = Key.builder().partitionValue(paId).sortValue(WebhookStreamRetryAfter.RETRY_PREFIX + streamId).build();
+
+        ReadBatch streamEntityBatch = ReadBatch.builder(StreamEntity.class)
+                .mappedTableResource(table)
+                .addGetItem(hashKey)
+                .build();
+        ReadBatch streamRetryEntityBatch = ReadBatch.builder(WebhookStreamRetryAfter.class)
+                .mappedTableResource(tableRetry)
+                .addGetItem(retryHashKey)
+                .build();
+
+        return Mono.from(dynamoDbEnhancedClient.batchGetItem(BatchGetItemEnhancedRequest.builder()
+                        .readBatches(streamEntityBatch, streamRetryEntityBatch)
+                        .build())
+                .map(batchGetResultPage ->
+                        Tuples.of(
+                                batchGetResultPage.resultsForTable(table).stream()
+                                        .filter(entity -> !entity.getStreamId().startsWith(WebhookStreamRetryAfter.RETRY_PREFIX))
+                                        .findFirst()
+                                        .orElseThrow(() -> new PnNotFoundException("Not found"
+                                                , String.format("Stream %s non found for Pa %s", streamId, paId)
+                                                , ERROR_CODE_STREAM_STREAMNOTFOUND)),
+                                batchGetResultPage.resultsForTable(tableRetry).stream()
+                                        .filter(entity -> entity.getStreamId().startsWith(WebhookStreamRetryAfter.RETRY_PREFIX) && Objects.nonNull(entity.getRetryAfter()))
+                                        .findFirst())));
+    }
+
+    @Override
     public Mono<Void> delete(String paId, String streamId) {
         log.info("delete paId={} streamId={}", paId, streamId);
         Key hashKey = Key.builder().partitionValue(paId).sortValue(streamId).build();
@@ -146,6 +177,12 @@ public class StreamEntityDaoDynamo implements StreamEntityDao {
     @Override
     public Mono<StreamEntity> disable(StreamEntity entity) {
         return update(disableStream(entity));
+    }
+
+    @Override
+    public Mono<Void> updateStreamRetryAfter(WebhookStreamRetryAfter entity) {
+        log.info("updateStreamRetryAfter entity={}", entity);
+        return Mono.fromFuture(tableRetry.putItem(entity));
     }
 
     private StreamEntity disableStream(StreamEntity streamEntity) {

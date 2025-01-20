@@ -216,19 +216,19 @@ Parameters:
 
   StreamsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing'
+    Description: 'Name of dynamodb table containing stream'
 
   StreamsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing'
+    Description: 'ARN of dynamodb table containing stream'
 
   EventsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing'
+    Description: 'Name of dynamodb table containing events'
 
   EventsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing'
+    Description: 'ARN of dynamodb table containing events'
 
   PnNotificationTableName:
     Type: String
@@ -243,6 +243,7 @@ Parameters:
     Type: String
     Description: 'Time interval between two webhook-scans every scan send notifications
                   update to Public Administration'
+    Default: 60000
 
   ScheduledActionsQueueName:
     Type: String
@@ -267,6 +268,16 @@ Parameters:
   MaxLength:
     Type: String
     Description: 'Max elements quantity for each webhook call'
+
+  RetryParameterPrefix:
+    Type: String
+    Description: 'Retry parameter prefix'
+
+  RetryAfterEnabled:
+    Type: String
+    Description: 'Allow to enable or disable retry after exception'
+    Default: 'false'
+    AllowedValues: [ true, false ]
 
   StreamEventManagerLambdaName:
     Type: String
@@ -324,8 +335,10 @@ Resources:
         ContainerEnvEntry8: !Sub 'PN_STREAM_DAO_EVENTSTABLENAME=${EventsTableName}'
         ContainerEnvEntry9: !Sub 'PN_STREAM_DAO_STREAMSTABLENAME=${StreamsTableName}'
         ContainerEnvEntry10: 'PN_STREAM_DATAVAULTBASEURL=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry11: !Sub 'PN_STREAM_RETRYPARAMETERPREFIX=${RetryParameterPrefix}'
+        ContainerEnvEntry12: !Sub 'PN_STREAM_RETRYAFTERENABLED=${RetryAfterEnabled}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/*'
+        MappedPaths: '/delivery-progresses-2/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
