@@ -257,7 +257,7 @@ Parameters:
   RetryAfterEnabled:
     Type: String
     Description: 'Allow to enable or disable retry after exception'
-    Default: 'false'
+    Default: false
     AllowedValues: [ true, false ]
 
 Resources:
