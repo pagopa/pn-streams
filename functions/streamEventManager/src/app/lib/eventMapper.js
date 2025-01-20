@@ -1,23 +1,12 @@
-const { parseKinesisObjToJsonObj } = require("./utils");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const crypto = require('crypto');
 
-const TABLES = {
-  NOTIFICATIONS: "pn-Notifications",
-  TIMELINES: "pn-Timelines",
-};
-
-
-
-exports.mapEvents = async (events) => {
-  const filteredEvents = events.filter((e) => {
-    return ( e.eventName == "INSERT" && e.tableName == TABLES.TIMELINES );
-  });
-
+exports.mapEvents = (events) => {
   let result = [];
 
-  for (let i = 0; i < filteredEvents.length; i++) {
+  for (let i = 0; i < events.length; i++) {
 
-    let timelineObj = parseKinesisObjToJsonObj(filteredEvents[i].dynamodb.NewImage);
+    let timelineObj = unmarshall(events[i].dynamodb.NewImage);
 
     let date = new Date();
 
@@ -42,7 +31,6 @@ exports.mapEvents = async (events) => {
         DataType: 'String',
         StringValue: crypto.randomUUID()
       },
-       
       createdAt: {
         DataType: 'String',
         StringValue: date.toISOString()
@@ -61,7 +49,7 @@ exports.mapEvents = async (events) => {
     */
 
     let resultElement = {
-      Id: filteredEvents[i].kinesisSeqNumber,
+      Id: events[i].kinesisSeqNumber,
       MessageAttributes: messageAttributes,
       MessageBody: JSON.stringify(action)
     };

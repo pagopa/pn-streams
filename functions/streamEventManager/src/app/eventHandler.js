@@ -25,7 +25,7 @@ exports.handleEvent = async (event) => {
     while(cdcEvents.length > 0){
       let currentCdcEvents = cdcEvents.splice(0,10);
       try{
-        let processedItems = await mapEvents(currentCdcEvents);
+        let processedItems = mapEvents(currentCdcEvents);
         if (processedItems.length > 0){
           let responseError = await sendMessages(processedItems);
 
