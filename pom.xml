@@ -183,34 +183,6 @@
 					</execution>
 					<execution>
 						<phase>generate-resources</phase>
-						<id>generate-client-pn-delivery</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<inputSpec>https://raw.githubusercontent.com/pagopa/pn-delivery/78d5e316a3e184ddb55003da6543d488cf7db911/docs/openapi/api-private.yaml</inputSpec>
-							<skipValidateSpec>true</skipValidateSpec>
-							<generatorName>java</generatorName>
-							<library>resttemplate</library>
-							<generateApiTests>false</generateApiTests>
-							<generateModelTests>false</generateModelTests>
-							<typeMappings>
-								<typeMapping>OffsetDateTime=java.time.Instant</typeMapping>
-							</typeMappings>
-							<configOptions>
-								<apiPackage>${project.groupId}.stream.generated.openapi.msclient.delivery.api</apiPackage>
-								<modelPackage>${project.groupId}.stream.generated.openapi.msclient.delivery.model</modelPackage>
-								<dateLibrary>java8</dateLibrary>
-								<annotationLibrary>none</annotationLibrary>
-								<documentationProvider>source</documentationProvider>
-								<openApiNullable>false</openApiNullable>
-								<useAbstractionForFiles>true</useAbstractionForFiles>
-								<useBeanValidation>false</useBeanValidation>
-							</configOptions>
-						</configuration>
-					</execution>
-					<execution>
-						<phase>generate-resources</phase>
 						<id>generate-client-pn-data-vault-reactive</id>
 						<goals>
 							<goal>generate</goal>

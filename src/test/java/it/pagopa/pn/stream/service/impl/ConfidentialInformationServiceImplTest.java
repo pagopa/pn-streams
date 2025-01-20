@@ -1,7 +1,5 @@
 package it.pagopa.pn.stream.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 import it.pagopa.pn.stream.dto.timeline.StatusInfoInternal;
@@ -25,43 +23,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ConfidentialInformationServiceImplTest {
     private ConfidentialInformationService confidentialInformationService;
     private PnDataVaultClientReactive pnDataVaultClientReactive;
-
-    private ObjectMapper objectMapper;
     
     @BeforeEach
     void setup() {
         pnDataVaultClientReactive = Mockito.mock( PnDataVaultClientReactive.class );
         confidentialInformationService = new ConfidentialInformationServiceImpl(
                 pnDataVaultClientReactive);
-        objectMapper = new ObjectMapper();
 
     }
-    
-    private TimelineElementInternal getSendPaperDetailsTimelineElement(String iun, String elementId) throws JsonProcessingException {
 
-      /*   SendAnalogDetailsInt details =  SendAnalogDetailsInt.builder()
-                .physicalAddress(
-                        PhysicalAddressInt.builder()
-                                .province("province")
-                                .municipality("munic")
-                                .at("at")
-                                .build()
-                )
-                .relatedRequestId("abc")
-                .analogCost(100)
-                .recIndex(0)
-                .sentAttemptMade(0)
-                .build();
-         */
+    private TimelineElementInternal getSendPaperDetailsTimelineElement(String iun, String elementId) {
+
         return TimelineElementInternal.builder()
                 .elementId(elementId)
                 .iun(iun)
-                .details( "" )
+                .details( "{\"recIndex\":0,\"physicalAddress\":{\"zip\":\"87100\",\"foreignState\":\"ITALIA\"},\"nextSourceAttemptsMade\":0}" )
                 .build();
     }
 
     @Test
-    void getTimelineConfidentialInformationWithTimeline() throws JsonProcessingException {
+    void getTimelineConfidentialInformationWithTimeline()  {
         TimelineElementInternal timelineElementInternal = getSendPaperDetailsTimelineElement("iun", "elementId");
         timelineElementInternal.setCategory("REQUEST_ACCEPTED");
         timelineElementInternal.setTimestamp(Instant.now());
@@ -98,7 +79,7 @@ class ConfidentialInformationServiceImplTest {
     }
 
     @Test
-    void getTimelineConfidentialInformationWithTimelineKo() throws JsonProcessingException {
+    void getTimelineConfidentialInformationWithTimelineKo() {
         TimelineElementInternal timelineElementInternal = getSendPaperDetailsTimelineElement("iun", "elementId");
         timelineElementInternal.setCategory("REQUEST_ACCEPTED");
         timelineElementInternal.setTimestamp(Instant.now());

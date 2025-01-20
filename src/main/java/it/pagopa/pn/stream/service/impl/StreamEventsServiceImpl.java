@@ -172,15 +172,15 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                 .toList();
 
         return confidentialInformationService.getTimelineConfidentialInformation(timelineElementInternals)
-                .map(confidentialInfo -> {
-                    // cerco l'elemento in TimelineElementInternals con elementiId
-                    TimelineElementInternal internal = timelineElementInternals.stream()
+                .map(confidentialInfo -> timelineElementInternals.stream()
                             .filter(i -> i.getElementId().equals(confidentialInfo.getTimelineElementId()))
                             .findFirst()
-                            .get();
-                    internal.setDetails(timelineService.enrichTimelineElementWithConfidentialInformation(internal.getDetails(), confidentialInfo));
-                    return internal;
-                })
+                            .map(timelineElementInternal -> {
+                                timelineElementInternal.setDetails(timelineService.enrichTimelineElementWithConfidentialInformation(timelineElementInternal.getDetails(), confidentialInfo));
+                                return timelineElementInternal;
+                            })
+                            .orElse(null)
+                )
                 .collectList()
                 .flatMapMany(item -> Flux.fromStream(eventEntities.stream()));
     }

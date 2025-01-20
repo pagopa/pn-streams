@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.pagopa.pn.stream.dto.ConfidentialInformationEnum;
+import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 import it.pagopa.pn.stream.exceptions.PnStreamException;
 import it.pagopa.pn.stream.service.TimelineService;
@@ -38,8 +39,10 @@ public class TimeLineServiceImpl implements TimelineService {
                             targetNode = (ObjectNode) detailsJson.get(confEnum.getParent());
                         }
 
-                        if (targetNode.has(confEnum.getTimelineKey())) {
+                        if (confEnum.getType().equals(String.class)) {
                             targetNode.set(confEnum.getTimelineKey(), confidentialJson.get(confEnum.getConfidentialValue()));
+                        }else if(targetNode.has(confEnum.getTimelineKey()) && confEnum.getType().equals(PhysicalAddressInt.class)){
+                            targetNode.set(confEnum.getTimelineKey(), mapper.valueToTree(confidentialDto.getPhysicalAddress()));
                         }
                     });
             return detailsJson.toString();

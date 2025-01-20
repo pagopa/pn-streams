@@ -4,7 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
 import it.pagopa.pn.stream.exceptions.PnStreamMaxStreamsCountReachedException;
-import it.pagopa.pn.stream.exceptions.PnStreamStreamNotFoundException;
+import it.pagopa.pn.stream.exceptions.PnStreamNotFoundException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamCreationRequestV26;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamListElement;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamMetadataResponseV26;
@@ -110,7 +110,7 @@ public class StreamsServiceImpl extends PnStreamServiceImpl implements StreamsSe
         generateAuditLog(PnAuditLogEventType.AUD_WH_READ, msg, args.toArray(new String[0])).log();
 
         return streamEntityDao.get(xPagopaPnCxId, streamId.toString())
-                .switchIfEmpty(Mono.error(new PnStreamStreamNotFoundException("Stream  " + streamId + " not found ")))
+                .switchIfEmpty(Mono.error(new PnStreamNotFoundException("Stream  " + streamId + " not found ")))
                 .filter(streamEntity -> entityVersion(streamEntity).equals(apiVersion(xPagopaPnApiVersion)))
                 .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Stream  " + streamId + " cannot be accessed by  xPagopaPnCxId=" + xPagopaPnCxId)))
                 .map(EntityToDtoStreamMapper::entityToDto)
