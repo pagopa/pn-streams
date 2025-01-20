@@ -51,7 +51,7 @@ class PnEventsControllerTest {
 
 
         webTestClient.get()
-                .uri( "/delivery-progresses/v2.6/streams/{streamId}/events".replace("{streamId}", streamId) )
+                .uri( "/delivery-progresses-2/v2.6/streams/{streamId}/events".replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -71,7 +71,7 @@ class PnEventsControllerTest {
     @Test
     void informOnExternalEvent() {
         webTestClient.post()
-                .uri( "/delivery-progresses/events" )
+                .uri( "/delivery-progresses-2/events" )
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");

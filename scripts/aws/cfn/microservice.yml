@@ -198,19 +198,19 @@ Parameters:
 
   StreamsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing'
+    Description: 'Name of dynamodb table containing stream'
 
   StreamsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing'
+    Description: 'ARN of dynamodb table containing stream'
 
   EventsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing'
+    Description: 'Name of dynamodb table containing events'
 
   EventsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing'
+    Description: 'ARN of dynamodb table containing events'
 
   PnNotificationTableName:
     Type: String
@@ -225,6 +225,7 @@ Parameters:
     Type: String
     Description: 'Time interval between two webhook-scans every scan send notifications
                   update to Public Administration'
+    Default: 60000
 
   ScheduledActionsQueueName:
     Type: String
@@ -257,7 +258,7 @@ Parameters:
   RetryAfterEnabled:
     Type: String
     Description: 'Allow to enable or disable retry after exception'
-    Default: false
+    Default: 'false'
     AllowedValues: [ true, false ]
 
 Resources:

@@ -4,6 +4,6 @@ import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 
 public interface TimelineService {
 
-    void enrichTimelineElementWithConfidentialInformation(Object details,
+    String enrichTimelineElementWithConfidentialInformation(String details,
                                                           ConfidentialTimelineElementDtoInt confidentialDto);
 }
