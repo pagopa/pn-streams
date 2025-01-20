@@ -1,18 +1,17 @@
 const { expect } = require("chai");
 const proxyquire = require("proxyquire").noPreserveCache();
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const {
+  mockClient,
+} = require("aws-sdk-client-mock");
 
 describe("Lambda Handler Tests", () => {
-  const mockDynamoDBClient = {
-    send: async () => ({}), // Simulating a successful DynamoDB operation
-  };
+  process.env.REGION = "us-east-1";
+  const mockDynamoDBClient = mockClient(DynamoDBClient);
 
   const lambda = proxyquire.noCallThru().load("../app/eventHandler.js", {
     "@aws-sdk/client-dynamodb": {
-      DynamoDBClient: class {
-        constructor() {
-          return mockDynamoDBClient;
-        }
-      },
+      DynamoDBClient: mockDynamoDBClient,
       PutItemCommand: class {
         constructor(input) {
           this.input = input;
@@ -21,18 +20,12 @@ describe("Lambda Handler Tests", () => {
     },
     "../app/lib/kinesis": {
       extractKinesisData: (event) => event.mockKinesisData || [], // Simulate Kinesis data extraction
-    },
-    "../app/lib/utils": {
-      parseKinesisObjToJsonObj: (newImage) => ({
-        iun: newImage.iun?.S,
-        group: newImage.group?.S,
-      }), // Simulate parsing Kinesis object
-    },
+    }
   });
 
   beforeEach(() => {
     delete process.env.TTL_OFFSET;
-    mockDynamoDBClient.send = async () => ({}); // Reset to simulate success
+    mockDynamoDBClient.reset();// Reset to simulate success
   });
 
   it("should handle empty event data", async () => {
@@ -88,9 +81,8 @@ describe("Lambda Handler Tests", () => {
     };
 
     // Simulate a DynamoDB failure
-    mockDynamoDBClient.send = async () => {
-      throw new Error("Simulated DynamoDB Error");
-    };
+
+    mockDynamoDBClient.rejectsOnce("Simulated DynamoDB Error"); // Simulate success
 
     const result = await lambda.handleEvent(event);
     expect(result).to.deep.equal({
@@ -177,9 +169,7 @@ describe("Lambda Handler Tests", () => {
       ],
     };
   
-    mockDynamoDBClient.send = async () => {
-      throw new Error("Simulated DynamoDB Error");
-    };
+    mockDynamoDBClient.rejectsOnce("Simulated DynamoDB Error"); // Simulate error
   
     const result = await lambda.handleEvent(event);
     expect(result).to.deep.equal({

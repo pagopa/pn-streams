@@ -11,8 +11,8 @@ function buildNotificationItem(newImage) {
   const ttl = Math.max(now + ttlOffset, 0);
 
   // Validate `iun` and `group` during item creation
-  if (!parsedData.iun || !parsedData.group) {
-    throw new Error(`Missing required fields 'iun' or 'group' in data: ${JSON.stringify(parsedData)}`);
+  if (!parsedData.iun) {
+    throw new Error(`Missing required fields 'iun' in data: ${JSON.stringify(parsedData)}`);
   }
 
   return {

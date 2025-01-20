@@ -17,13 +17,6 @@ exports.handleEvent = async (event) => {
     try {
       const notificationItem = buildNotificationItem(cdcEvent.dynamodb.NewImage);
 
-      // Validate `iun` and `group` values
-      if (!notificationItem.Item.hashKey.S || !notificationItem.Item.group.S) {
-        const errorMessage = `Invalid data: missing or empty 'iun' or 'group' for event: ${JSON.stringify(cdcEvent)}`;
-        console.error(errorMessage);
-        throw new Error(errorMessage);
-      }
-
       await putNotificationItem(notificationItem);
     } catch (error) {
       console.error("Error processing event", cdcEvent, error);
