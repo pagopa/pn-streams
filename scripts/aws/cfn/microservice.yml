@@ -50,7 +50,7 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-  
+
   
   Version:
     Type: String
@@ -300,7 +300,7 @@ Resources:
         ContainerEnvEntry11: !Sub 'PN_STREAM_RETRYPARAMETERPREFIX=${RetryParameterPrefix}'
         ContainerEnvEntry12: !Sub 'PN_STREAM_RETRYAFTERENABLED=${RetryAfterEnabled}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/*'
+        MappedPaths: '/delivery-progresses-2/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId

@@ -29,7 +29,7 @@ class ProblemErrorTest {
     void getCode() {
         Assertions.assertEquals("code", problemError.getCode());
     }
-
+    
 
     @Test
     void getDetail() {
