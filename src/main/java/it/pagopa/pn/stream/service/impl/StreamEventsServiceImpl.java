@@ -1,5 +1,8 @@
 package it.pagopa.pn.stream.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
@@ -46,6 +49,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     private final ConfidentialInformationService confidentialInformationService;
 
     private final SsmParameterConsumerActivation ssmParameterConsumerActivation;
+    private static final String LOG_MSG_JSON_COMPRESSION = "Error while compressing timeline elements into JSON for the audit";
 
 
     public StreamEventsServiceImpl(StreamEntityDao streamEntityDao, EventEntityDao eventEntityDao,
@@ -81,6 +85,10 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                             .onErrorResume(ex -> Mono.error(new PnInternalException("Timeline element entity not converted into JSON", ERROR_CODE_PN_GENERIC_ERROR)))
                             //timeline ancora anonimizzato - EventEntity + TimelineElementInternal
                             .collectList()
+                            .map(items -> {
+                                generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateSuccess("timelineElementIds {}", createAuditLogOfElementsId(items)).log();
+                                return items;
+                            })
                             // chiamo timelineService per aggiungere le confidentialInfo
                             .flatMapMany(items -> {
                                 if (streamUtils.getVersion(xPagopaPnApiVersion) == 10)
@@ -114,6 +122,32 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                             .doOnSuccess(progressResponseElementDto -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateSuccess("ProgressResponseElementDto size={}", progressResponseElementDto.getProgressResponseElementList().size()).log())
                             .doOnError(error -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateFailure("Error in consumeEventStream").log())
                 );
+    }
+
+    private String createAuditLogOfElementsId(List<EventTimelineInternalDto> items) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+        HashMap<String, List<String>> iunWithTimelineElementId = new HashMap<>();
+
+        items.forEach(timelineElement -> {
+            List<String> elements = iunWithTimelineElementId.get(timelineElement.getEventEntity().getIun());
+            String description = timelineElement.getEventEntity().getEventDescription().replace(".IUN_"+timelineElement.getEventEntity().getIun(), "");
+            if(elements == null) {
+                elements = new ArrayList<>(Collections.singletonList(description));
+            } else {
+                elements.add(description);
+            }
+            iunWithTimelineElementId.put(timelineElement.getEventEntity().getIun(), elements);
+        });
+
+        iunWithTimelineElementId.keySet().forEach(iun -> rootNode.put(iun, iunWithTimelineElementId.get(iun).toString()));
+
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
+        } catch (JsonProcessingException e) {
+            log.error(LOG_MSG_JSON_COMPRESSION, e);
+            throw new PnInternalException(LOG_MSG_JSON_COMPRESSION, ERROR_CODE_PN_GENERIC_ERROR);
+        }
     }
 
     private WebhookStreamRetryAfter constructNewRetryAfterEntity(String xPagopaPnCxId, UUID streamId) {
