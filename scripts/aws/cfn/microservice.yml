@@ -130,6 +130,7 @@ Parameters:
     Description: Log alarm strategy
     Default: 'FATAL'
 
+
   NotificationStreamManagerLambdaName:
     Type: String
 
@@ -138,6 +139,7 @@ Parameters:
     Type: String
     Default: ''
     Description: 'Name of the bucket where the microservice files are copied during deploy'
+
 
   MicroserviceBucketBaseKey:
     Type: String
@@ -167,6 +169,10 @@ Parameters:
   EventQueueARN:
     Type: String
     Description: actions queue ARN
+
+  EventQueueURL:
+    Type: String
+    Description: actions queue URL
 
   NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds:
     Type: Number
@@ -283,21 +289,13 @@ Parameters:
     Type: String
     Description: 'Name of the lambda function that manages the stream events'
 
-  StreamInternalQueueURL:
-    Type: String
-    Description: 'URL of the queue containing internal actions'
-
-  StreamInternalQueueName:
-    Type: String
-    Description: 'Name of the queue containing internal actions'
-
-  StreamInternalQueueARN:
-    Type: String
-    Description: 'ARN of the queue containing internal actions'
-
   StreamEventManagerDLQARN:
     Type: String
     Description: 'ARN of the DLQ queue for stream event manager lambda'
+
+  PnTimelinesTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing'
 
 Resources:
 
@@ -403,7 +401,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          QUEUE_URL: !Ref StreamInternalQueueURL
+          QUEUE_URL: !Ref EventQueueURL
           START_READ_STREAM_TIMESTAMP: !Sub '${StartReadStreamTimestamp}'
           STOP_READ_STREAM_TIMESTAMP: !Sub '${StopReadStreamTimestamp}'
       TracingConfig:
@@ -459,15 +457,8 @@ Resources:
               - sqs:GetQueueUrl
               - sqs:SendMessage
             Resource:
-              !Ref StreamInternalQueueARN
-          - Effect: Allow
-            Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:SendMessage
-            Resource:
-              !Ref StreamEventManagerDLQARN
+              - !Ref EventQueueARN
+              - !Ref StreamEventManagerDLQARN
 
 
   # CDC to Stream Event Manager
@@ -487,7 +478,7 @@ Resources:
           Destination: !Ref StreamEventManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: '{"tableName": ["pn-Timelines"], "eventName": ["INSERT"]}'
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnTimelinesTableName}"]}'
 
   StreamEventManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -619,6 +610,7 @@ Resources:
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
+            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
         DynamoDBTableNames: !Join
           - ','
           - - !Ref StreamNotificationTableName
