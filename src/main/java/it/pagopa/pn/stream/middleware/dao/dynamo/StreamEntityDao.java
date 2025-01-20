@@ -14,6 +14,8 @@ public interface StreamEntityDao {
 
     Mono<StreamEntity> get(String paId, String streamId);
 
+    Mono<Tuple2<StreamEntity, Optional<WebhookStreamRetryAfter>>> getWithRetryAfter(String paId, String streamId);
+
     Mono<Void> delete(String paId, String streamId);
 
     Mono<StreamEntity> save(StreamEntity entity);
@@ -32,4 +34,5 @@ public interface StreamEntityDao {
 
     Mono<StreamEntity> disable(StreamEntity entity);
 
+    Mono<Void> updateStreamRetryAfter(WebhookStreamRetryAfter entity);
 }
