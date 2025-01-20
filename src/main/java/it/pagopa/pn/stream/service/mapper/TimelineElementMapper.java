@@ -3,6 +3,7 @@ package it.pagopa.pn.stream.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.exceptions.PnStreamException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactsIdV20;
@@ -17,6 +18,7 @@ public class TimelineElementMapper {
     
     public static TimelineElementV26 internalToExternal(TimelineElementInternal internalDto) {
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         TimelineElementV26.TimelineElementV26Builder builder = null;
         try {
