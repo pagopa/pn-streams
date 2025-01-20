@@ -192,6 +192,11 @@ Parameters:
     Type: String
     Description: 'Name of dynamodb table containing stream notifications'
 
+  StreamNotificationTtl:
+    Type: Number
+    Description: 'TTL offset for stream notifications'
+    Default: 7889400
+
   StreamNotificationTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing stream notifications'
@@ -364,6 +369,8 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
+          TABLE_NAME: !Sub '${StreamNotificationTableName}'
+          TTL_OFFSET: !Sub '${StreamNotificationTtl}'
       TracingConfig:
         Mode: Active
       Layers:
