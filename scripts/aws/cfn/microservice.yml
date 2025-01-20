@@ -250,6 +250,15 @@ Parameters:
     Type: String
     Description: 'Max elements quantity for each webhook call'
 
+  RetryParameterPrefix:
+    Type: String
+    Description: 'Retry parameter prefix'
+
+  RetryAfterEnabled:
+    Type: String
+    Description: 'Allow to enable or disable retry after exception'
+    Default: 'false'
+    AllowedValues: [ true, false ]
 
 Resources:
 
@@ -287,6 +296,8 @@ Resources:
         ContainerEnvEntry8: !Sub 'PN_STREAM_DAO_EVENTSTABLENAME=${EventsTableName}'
         ContainerEnvEntry9: !Sub 'PN_STREAM_DAO_STREAMSTABLENAME=${StreamsTableName}'
         ContainerEnvEntry10: 'PN_STREAM_DATAVAULTBASEURL=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry11: !Sub 'PN_STREAM_RETRYPARAMETERPREFIX=${RetryParameterPrefix}'
+        ContainerEnvEntry12: !Sub 'PN_STREAM_RETRYAFTERENABLED=${RetryAfterEnabled}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/delivery-progresses-2/*'
         ECSClusterName: !Ref ECSClusterName
