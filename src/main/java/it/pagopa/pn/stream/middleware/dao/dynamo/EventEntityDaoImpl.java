@@ -18,13 +18,13 @@ import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.so
 
 @Component
 @Slf4j
-public class EventEntityDaoDynamo implements EventEntityDao {
+public class EventEntityDaoImpl implements EventEntityDao {
 
     private final DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient;
     private final DynamoDbAsyncTable<EventEntity> table;
     private final int limitCount;
 
-    public EventEntityDaoDynamo(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnStreamConfigs cfg) {
+    public EventEntityDaoImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnStreamConfigs cfg) {
         this.table = dynamoDbEnhancedClient.table(cfg.getDao().getEventsTableName(), TableSchema.fromBean(EventEntity.class));
         this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
         this.limitCount = cfg.getMaxLength();

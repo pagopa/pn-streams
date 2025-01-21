@@ -323,6 +323,10 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
             Resource:
               - !Sub "${StreamsTableArn}"
               - !Sub "${StreamsTableArn}/*"
