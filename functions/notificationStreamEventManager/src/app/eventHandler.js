@@ -3,6 +3,9 @@ const { putNotificationItem, buildNotificationItem } = require("../app/lib/dynam
 
 exports.handleEvent = async (event) => {
 
+  const TABLE_NAME = process.env.TABLE_NAME;
+  const TTL_OFFSET = process.env.TTL_OFFSET;
+
   const cdcEvents = extractKinesisData(event);
   console.log(`Batch size: ${cdcEvents.length} cdc`);
 
@@ -15,7 +18,7 @@ exports.handleEvent = async (event) => {
 
   for (const cdcEvent of cdcEvents) {
     try {
-      const notificationItem = buildNotificationItem(cdcEvent.dynamodb.NewImage);
+      const notificationItem = buildNotificationItem(cdcEvent.dynamodb.NewImage, TABLE_NAME, parseInt(TTL_OFFSET, 10));
 
       await putNotificationItem(notificationItem);
     } catch (error) {

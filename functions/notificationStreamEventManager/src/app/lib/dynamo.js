@@ -2,12 +2,10 @@ const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 const dynamoDbClient = new DynamoDBClient({ region: process.env.REGION });
-const TABLE_NAME = process.env.TABLE_NAME;
 
-function buildNotificationItem(newImage) {
+function buildNotificationItem(newImage, tableName, ttlOffset) {
   const parsedData = unmarshall(newImage);
   const now = Math.floor(Date.now() / 1000);
-  const ttlOffset = parseInt(process.env.TTL_OFFSET, 10);
   const ttl = Math.max(now + ttlOffset, 0);
 
   // Validate `iun` and `group` during item creation
@@ -16,11 +14,11 @@ function buildNotificationItem(newImage) {
   }
 
   return {
-    TableName: TABLE_NAME,
+    TableName: tableName,
     Item: {
       hashKey: { S: parsedData.iun },
       group: { S: parsedData.group }, // Storing `group` as a single string
-      creationDate: { S: new Date().toISOString() },
+      creationDate: { S: parsedData.sentAt },
       ttl: { N: ttl.toString() },
     },
   };
