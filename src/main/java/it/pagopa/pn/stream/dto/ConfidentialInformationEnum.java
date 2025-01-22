@@ -1,31 +1,37 @@
 package it.pagopa.pn.stream.dto;
 
-import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import lombok.Getter;
 
 @Getter
 public enum ConfidentialInformationEnum {
 
-    TAX_ID("taxId", "taxId", null, String.class),
-    DENOMINATION("denomination", "denomination", null, String.class),
-    NORMALIZED_ADDRESS("normalizedAddress", "newPhysicalAddress", null, PhysicalAddressInt.class),
-    NEW_ADDRESS("newAddress", "newPhysicalAddress", null, PhysicalAddressInt.class),
-    PHYSICAL_ADDRESS("physicalAddress", "physicalAddress", null, PhysicalAddressInt.class),
-    OLD_ADDRESS("oldAddress", "physicalAddress", null, PhysicalAddressInt.class),
-    FOUND_ADDRESS("foundAddress", "physicalAddress", null, PhysicalAddressInt.class),
-    DIGITAL_ADDRESS("address","digitalAddress", "digitalAddress", String.class);
+    TAX_ID("taxId", "taxId",  null, "delegateInfo"),
+    DENOMINATION("denomination", "denomination", null, "delegateInfo"),
+    DIGITAL_ADDRESS("address","digitalAddress", null , "digitalAddress"),
+    PHYSICAL_ADDRESS("physicalAddress", "physicalAddress", "physicalAddress",null),
+    NORMALIZED_ADDRESS("newAddress", "newPhysicalAddress", "normalizedAddress",null),
+    NEW_ADDRESS("newAddress", "newPhysicalAddress", "newAddress" ,null),
+    OLD_ADDRESS("physicalAddress", "physicalAddress", "oldAddress" ,null),
+    FOUND_ADDRESS("physicalAddress", "physicalAddress", "foundAddress" ,null);
 
     private final String timelineKey;
     private final String confidentialValue;
+    private final String eventValue;
     private final String parent;
-    private final Class<?> type;
 
 
-    ConfidentialInformationEnum(String timelineKey, String confidentialValue, String parent, Class<?> type) {
+    ConfidentialInformationEnum(String timelineKey, String confidentialValue,  String eventValue, String parent) {
         this.timelineKey = timelineKey;
         this.confidentialValue = confidentialValue;
+        this.eventValue = eventValue;
         this.parent = parent;
-        this.type = type;
+    }
+
+    public enum CustomCategory {
+        NORMALIZED_ADDRESS,
+        SEND_ANALOG_FEEDBACK,
+        PREPARE_ANALOG_DOMICILE_FAILURE;
+
     }
 
 }
