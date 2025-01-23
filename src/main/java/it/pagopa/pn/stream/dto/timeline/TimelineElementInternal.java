@@ -1,5 +1,6 @@
 package it.pagopa.pn.stream.dto.timeline;
 
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactsIdV20;
 import lombok.*;
 
 import java.time.Instant;
@@ -17,7 +18,7 @@ public class TimelineElementInternal{
     private String elementId;
     private Instant timestamp;
     private String paId;
-    private List<String> legalFactsIds;
+    private List<LegalFactsIdV20> legalFactsIds;
     private String category;
     private String details;
     private StatusInfoInternal statusInfo;
