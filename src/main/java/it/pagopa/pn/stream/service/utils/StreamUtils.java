@@ -2,14 +2,12 @@ package it.pagopa.pn.stream.service.utils;
 
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.dto.ext.delivery.notification.NotificationInt;
-import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
 import it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes;
 import it.pagopa.pn.stream.middleware.dao.notificationdao.NotificationDao;
 import it.pagopa.pn.stream.middleware.dao.notificationdao.dynamo.entity.NotificationEntity;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook.WebhookTimelineElementEntity;
-import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.DtoToEntityWebhookTimelineMapper;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.EntityToDtoWebhookTimelineMapper;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.WebhookTimelineElementJsonConverter;
 import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
@@ -24,11 +22,6 @@ import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,7 +29,6 @@ import java.util.List;
 @Slf4j
 @Component
 public class StreamUtils {
-    private final DtoToEntityWebhookTimelineMapper mapperTimeline;
     private final EntityToDtoWebhookTimelineMapper entityToDtoTimelineMapper;
     private final WebhookTimelineElementJsonConverter timelineElementJsonConverter;
     private final NotificationService notificationService;
@@ -44,14 +36,12 @@ public class StreamUtils {
     private final PnStreamConfigs pnStreamConfigs;
     private final NotificationDao notificationDao;
 
-    public StreamUtils(NotificationService notificationService,
+   public StreamUtils(NotificationService notificationService,
                        PnStreamConfigs pnStreamConfigs, DtoToEntityWebhookTimelineMapper mapperTimeline, EntityToDtoWebhookTimelineMapper entityToDtoTimelineMapper,
                        WebhookTimelineElementJsonConverter timelineElementJsonConverter, NotificationDao notificationDao) {
         this.notificationService = notificationService;
         this.entityToDtoTimelineMapper = entityToDtoTimelineMapper;
         this.pnStreamConfigs = pnStreamConfigs;
-        this.ttl = pnStreamConfigs.getWebhook().getTtl();
-        this.mapperTimeline = mapperTimeline;
         this.timelineElementJsonConverter = timelineElementJsonConverter;
         this.notificationDao = notificationDao;
     }
@@ -109,14 +99,6 @@ public class StreamUtils {
     }
 
 
-    @Builder
-    @Getter
-    public static class RetrieveTimelineResult {
-        private StatusService.NotificationStatusUpdate notificationStatusUpdate;
-        private TimelineElementInternal event;
-        private NotificationInt notificationInt;
-    }
-
     public static boolean checkGroups(List<String> toCheckGroups, List<String> allowedGroups){
         List<String> safeToCheck = toCheckGroups != null ? toCheckGroups : Collections.emptyList();
         List<String> safeAllowedGroups = allowedGroups != null ? allowedGroups : Collections.emptyList();
@@ -130,7 +112,7 @@ public class StreamUtils {
             String versionNumberString = version.toLowerCase().replace("v", "");
             return Integer.parseInt(versionNumberString);
         }
-        return Integer.parseInt(pnStreamConfigs.getWebhook().getCurrentVersion().replace("v", ""));
+        return Integer.parseInt(pnStreamConfigs.getCurrentVersion().replace("v", ""));
 
     }
 }

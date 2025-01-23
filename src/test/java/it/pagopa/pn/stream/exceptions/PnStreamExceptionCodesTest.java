@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 
 class PnStreamExceptionCodesTest {
 
-    private PnStreamExceptionCodes code;
 
     @Test
     void checkAll() {

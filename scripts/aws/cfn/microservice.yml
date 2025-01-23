@@ -27,9 +27,9 @@ Parameters:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
 
-  SubnetsIds:
-    Type: CommaDelimitedList
-    Description: 'subnets ids comma separated list. Where to deploy the microservice'
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'subnets ids. Where to deploy the microservice'
 
   VpcId:
     Type: String
@@ -50,10 +50,7 @@ Parameters:
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
-  
-  LogsKinesisSourceStreamArn:
-    Type: String
-    Description: 'Kinesis stream that receive logs'
+
   
   Version:
     Type: String
@@ -71,19 +68,20 @@ Parameters:
     Description: Fargate virtual CPU quantity 1024 equals one vCPU
 
   MemoryAmount:
-    Type: Number
-    Default: 2048
-    Description: Fargate memory amount in MB
+    Type: String
+    Default: 2GB
+    Description: memory amount reserved to the task pod.
+    AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
 
   HealthCheckTimeout:
-    Type: Number
-    Default: 30
     Description: Health check timeout in seconds
+    Type: Number
+    Default: 5
 
   HealthCheckInterval:
-    Type: Number
-    Default: 30
     Description: Health check interval in seconds
+    Type: Number
+    Default: 60
 
   HealthyThresholdCount:
     Type: Number
@@ -95,16 +93,6 @@ Parameters:
     Default: 3
     Description: Number of consecutive health check failures required before considering a target unhealthy
 
-  AutoscalingThreshold:
-    Type: Number
-    Default: 75
-    Description: CPU utilization percentage to trigger autoscaling
-
-  AutoscalingCheckPeriod:
-    Type: Number
-    Default: 60
-    Description: Period in seconds to check for autoscaling
-
   MinTasksNumber:
     Type: Number
     Default: 1
@@ -115,16 +103,6 @@ Parameters:
     Default: 10
     Description: Maximum number of tasks for the service
 
-  AutoscalingDataPointN:
-    Type: Number
-    Default: 3
-    Description: Number of data points to alarm for autoscaling
-
-  AutoscalingDataPointM:
-    Type: Number
-    Default: 5
-    Description: Number of evaluation periods for autoscaling
-
   FargateEFSFileSystemID:
     Type: String
     Description: EFS File System ID for Fargate
@@ -132,14 +110,12 @@ Parameters:
   MountEfs:
     Type: String
     Description: Whether to mount EFS (true/false)
+    Default: 'false'
 
   WireTapLogActivation:
     Type: String
     Description: Whether to activate wiretap logging (true/false)
-
-  ContainerImageURI:
-    Type: String
-    Description: URI of the container image
+    Default: 'false'
 
   AlbSecurityGroup:
     Type: String
@@ -152,16 +128,8 @@ Parameters:
   LogAlarmStrategy:
     Type: String
     Description: Log alarm strategy
+    Default: 'FATAL'
 
-  ConsumedQueueMessagePerMinute:
-    Type: Number
-    Default: 0
-    Description: Weight to assign to queue number of visible messages metric
-
-  ApplicationLoadBalancerMetricsDimensionName:
-    Type: String
-    Default: ''
-    Description: Application load balancer dimension name
 
   NotificationStreamManagerLambdaName:
     Type: String
@@ -186,45 +154,45 @@ Parameters:
     Type: String
     Description: 'DLQ ARN for NotificationStreamManagerLambda'
 
-  DoneActionsQueueAlarmARN:
+  EventQueueAlarmARN:
     Type: String
     Description: stream actions queue dlq alarm ARN
 
-  DoneActionsQueueAgeAlarmARN:
+  EventQueueAgeAlarmARN:
     Type: String
     Description: stream actions queue age alarm ARN
 
-  DoneActionsQueueName:
+  EventQueueName:
     Type: String
     Description: actions queue name
 
-  DoneActionsQueueARN:
+  EventQueueARN:
     Type: String
     Description: actions queue ARN
 
-  StreamEventManagerDLQAlarmARN:
+  EventQueueURL:
     Type: String
-    Description: 'DLQ Alarm ARN for StreamEventManagerLambda'
+    Description: actions queue URL
 
-  StreamEventManagerDLQARN:
-    Type: String
-    Description: 'DLQ ARN for StreamEventManagerLambda'
+  NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds:
+    Type: Number
+    Default: 20
+    Description: Batching window size for lambda triggering
 
   StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
     Type: Number
     Default: 20
     Description: Batching window size for lambda triggering
 
-  StreamEventManagerLambdaBatchSize:
+  NotificationStreamManagerLambdaBatchSize:
     Type: Number
     Default: 60
     Description: Batch size for lambda triggering
 
-  StreamEventManagerLambdaName:
-    Type: String
-    Default: Name of Event Manager Lambda
-
-  # CDC
+  StreamEventManagerLambdaBatchSize:
+    Type: Number
+    Default: 60
+    Description: Batch size for lambda triggering
 
   CdcKinesisSourceStreamArn:
     Type: String
@@ -234,17 +202,105 @@ Parameters:
     Description: "Kinesis source CDC stream crypto key ARN"
     Type: String
 
-  WebhookNotificationTableName:
+  StreamNotificationTableName:
     Type: String
-    Description: 'Name of dynamodb table containing webhook notifications'
+    Description: 'Name of dynamodb table containing stream notifications'
 
-  WebhookNotificationTableArn:
+  StreamNotificationTtl:
+    Type: Number
+    Description: 'TTL offset for stream notifications'
+    Default: 7889400
+
+  StreamNotificationTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing webhook notifications'
+    Description: 'ARN of dynamodb table containing stream notifications'
+
+  StartReadStreamTimestamp:
+    Type: String
+    Description: 'Start timestamp for read stream'
+    Default: "1999-01-01T00:00:00Z"
+
+  StopReadStreamTimestamp:
+    Type: String
+    Description: 'Stop timestamp for read stream'
+    Default: "2099-01-01T00:00:00Z"
+
+  StreamsTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing stream'
+
+  StreamsTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing stream'
+
+  EventsTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing events'
+
+  EventsTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing events'
 
   PnNotificationTableName:
     Type: String
-    Description: 'Name of dynamodb table containing notifications'
+    Description: 'Name of dynamodb table containing'
+
+  StreamAutoscalingThreshold:
+    Type: Number
+    Description: 'Threshold for autoscaling'
+    Default: 1000
+
+  ScheduleInterval:
+    Type: String
+    Description: 'Time interval between two webhook-scans every scan send notifications
+                  update to Public Administration'
+    Default: 60000
+
+  ScheduledActionsQueueName:
+    Type: String
+    Description: 'Name of the queue containing scheduled actions'
+
+  ScheduledActionsQueueARN:
+    Type: String
+    Description: 'Send and pull ready-to-do actions th this queue'
+
+  ScheduledActionsQueueAlarmARN:
+    Type: String
+    Description: delivery push actions done queue dlq alarm ARN
+
+  ScheduledActionsQueueAgeAlarmARN:
+    Type: String
+    Description: delivery push actions done queue age alarm ARN
+
+  MaxStreams:
+    Type: String
+    Description: 'Max stream number'
+
+  MaxLength:
+    Type: String
+    Description: 'Max elements quantity for each webhook call'
+
+  RetryParameterPrefix:
+    Type: String
+    Description: 'Retry parameter prefix'
+
+  RetryAfterEnabled:
+    Type: String
+    Description: 'Allow to enable or disable retry after exception'
+    Default: 'false'
+    AllowedValues: [ true, false ]
+
+  StreamEventManagerLambdaName:
+    Type: String
+    Description: 'Name of the lambda function that manages the stream events'
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'ARN of the DLQ queue for stream event manager lambda'
+
+  PnTimelinesTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing'
 
 Resources:
 
@@ -257,27 +313,37 @@ Resources:
         MicroServiceUniqueName: !Sub '${ProjectName}-stream'
         CpuValue: !Ref CpuValue
         MemoryAmount: !Ref MemoryAmount
+        HealthCheckPath: /actuator/health
         HealthCheckTimeout: !Ref HealthCheckTimeout
         HealthCheckInterval: !Ref HealthCheckInterval
         HealthyThresholdCount: !Ref HealthyThresholdCount
         UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-        AutoscalingStrategy: CUSTOM
-        AutoscalingThreshold: !Ref AutoscalingThreshold
-        AutoscalingCheckPeriod: !Ref AutoscalingCheckPeriod
+        AutoscalingStrategy: 'SQS'
+        AutoscalingQueueName: !Ref EventQueueName
+        AutoscalingThreshold: !Ref StreamAutoscalingThreshold
         MinTasksNumber: !Ref MinTasksNumber
         MaxTasksNumber: !Ref MaxTasksNumber
-        AutoscalingDataPointN: !Ref AutoscalingDataPointN
-        AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         EfsFilesystem: !Ref FargateEFSFileSystemID
         MountEfs: !Ref MountEfs
         WireTapLogActivation: !Ref WireTapLogActivation
         ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'PN_STREAM_DAO_WEBHOOKNOTIFICATIONTABLE=${WebhookNotificationTableName}'
+        ContainerEnvEntry1: !Sub "AWS_REGIONCODE=${AWS::Region}"
+        ContainerEnvEntry2: !Sub 'PN_STREAM_DAO_STREAMNOTIFICATIONTABLE=${StreamNotificationTableName}'
+        ContainerEnvEntry3: !Sub 'PN_STREAM_SCHEDULEINTERVAL=${ScheduleInterval}'
+        ContainerEnvEntry4: !Sub 'PN_STREAM_TOPICS_SCHEDULEDACTIONS=${ScheduledActionsQueueName}'
+        ContainerEnvEntry5: !Sub 'PN_STREAM_MAXSTREAMS=${MaxStreams}'
+        ContainerEnvEntry6: !Sub 'PN_STREAM_MAXLENGTH=${MaxLength}'
+        ContainerEnvEntry7: !Sub 'PN_STREAM_EXTERNALREGISTRYBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry8: !Sub 'PN_STREAM_DAO_EVENTSTABLENAME=${EventsTableName}'
+        ContainerEnvEntry9: !Sub 'PN_STREAM_DAO_STREAMSTABLENAME=${StreamsTableName}'
+        ContainerEnvEntry10: 'PN_STREAM_DATAVAULTBASEURL=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry11: !Sub 'PN_STREAM_RETRYPARAMETERPREFIX=${RetryParameterPrefix}'
+        ContainerEnvEntry12: !Sub 'PN_STREAM_RETRYAFTERENABLED=${RetryAfterEnabled}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
-        MappedPaths: '/*'
+        MappedPaths: '/delivery-progresses-2/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Join [ ',', !Ref SubnetsIds ]
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
@@ -298,9 +364,17 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
             Resource:
-              - !Sub "${WebhookNotificationTableArn}"
-              - !Sub "${WebhookNotificationTableArn}/*"
+              - !Sub "${StreamsTableArn}"
+              - !Sub "${StreamsTableArn}/*"
+              - !Sub "${EventsTableArn}"
+              - !Sub "${EventsTableArn}/*"
+              - !Sub "${StreamNotificationTableArn}"
+              - !Sub "${StreamNotificationTableArn}/*"
           - Effect: Allow
             Action:
               - sqs:ChangeMessageVisibility
@@ -312,7 +386,116 @@ Resources:
               - sqs:ReceiveMessage
               - sqs:SendMessage
               - sqs:SendMessageBatch
-            Resource: !Ref DoneActionsQueueARN
+            Resource:
+              - !Ref EventQueueARN
+              - !Ref ScheduledActionsQueueARN
+
+
+
+  #########################################################
+  ###              StreamEventManagerLambda            ###
+  #########################################################
+
+  # Lambda function
+  StreamEventManagerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref StreamEventManagerLambdaName
+      Runtime: nodejs18.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/streamEventManager.zip"
+      Role: !GetAtt StreamEventManagerLambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          QUEUE_URL: !Ref EventQueueURL
+          START_READ_STREAM_TIMESTAMP: !Sub '${StartReadStreamTimestamp}'
+          STOP_READ_STREAM_TIMESTAMP: !Sub '${StopReadStreamTimestamp}'
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 10
+
+  # Lambda function role
+  StreamEventManagerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-streamEventManagerLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function IAM policy
+  StreamEventManagerLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-StreamEventManagerLambdaPolicy
+      Roles:
+        - !Ref StreamEventManagerLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kinesis:DescribeStream
+              - kinesis:DescribeStreamSummary
+              - kinesis:GetShardIterator
+              - kinesis:GetRecords
+              - kinesis:ListShards
+              - kinesis:ListStreams
+              - kinesis:SubscribeToShard
+            Resource: !Ref CdcKinesisSourceStreamArn
+          - Action: kms:Decrypt
+            Effect: Allow
+            Resource: !Ref CdcKinesisSourceStreamKeyArn
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource:
+              - !Ref EventQueueARN
+              - !Ref StreamEventManagerDLQARN
+
+
+  # CDC to Stream Event Manager
+  StreamEventManagerLambdaKinesisSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
+      BisectBatchOnFunctionError: true
+      EventSourceArn: !Ref CdcKinesisSourceStreamArn
+      FunctionName: !Ref StreamEventManagerLambda
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+      MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
+      StartingPosition: TRIM_HORIZON
+      DestinationConfig:
+        OnFailure:
+          Destination: !Ref StreamEventManagerDLQARN
+      FilterCriteria:
+        Filters:
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnTimelinesTableName}"]}'
+
+  StreamEventManagerLambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref StreamEventManagerLambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
 
   #########################################################
   ###         NotificationStreamManagerLambda           ###
@@ -332,6 +515,8 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
+          TABLE_NAME: !Sub '${StreamNotificationTableName}'
+          TTL_OFFSET: !Sub '${StreamNotificationTtl}'
       TracingConfig:
         Mode: Active
       Layers:
@@ -391,20 +576,20 @@ Resources:
   NotificationStreamManagerLambdaKinesisSource:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
+      BatchSize: !Sub ${NotificationStreamManagerLambdaBatchSize}
       BisectBatchOnFunctionError: true
       EventSourceArn: !Ref CdcKinesisSourceStreamArn
       FunctionName: !Ref NotificationStreamManagerLambda
       FunctionResponseTypes:
         - ReportBatchItemFailures
-      MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
+      MaximumBatchingWindowInSeconds: !Sub ${NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds}
       StartingPosition: TRIM_HORIZON
       DestinationConfig:
         OnFailure:
           Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: !Sub '{"tableName": [${PnNotificationTableName}], "eventName": ["INSERT"]}'
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnNotificationTableName}"]}'
 
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -424,82 +609,24 @@ Resources:
         DashboardName: !Sub "${ProjectName}-stream"
         AlarmArns: !Join
           - ','
-          - - !Ref DoneActionsQueueAlarmARN
-            - !Ref DoneActionsQueueAgeAlarmARN
+          - - !Ref EventQueueAlarmARN
+            - !Ref EventQueueAgeAlarmARN
+            - !Ref ScheduledActionsQueueAlarmARN
+            - !Ref ScheduledActionsQueueAgeAlarmARN
         QueueArns: !Join
           - ','
-          - - !Ref StreamEventManagerDLQAlarmARN
-            - !Ref DoneActionsQueueARN
+          - - !Ref EventQueueARN
+            - !Ref ScheduledActionsQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
-            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
+            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
         DynamoDBTableNames: !Join
           - ','
-          - - !Ref WebhookNotificationTableName
-
-  #### Alarm for custom metric Autoscaling
-  AlarmCustomAutoscaling:
-    Type: "AWS::CloudWatch::Alarm"
-    Properties:
-      AlarmName: !Sub "${ProjectName}-stream-autoscaling-custom"
-      AlarmDescription: "Trigger scaling based on custom metric"
-      DatapointsToAlarm: !Ref AutoscalingDataPointN
-      ComparisonOperator: "GreaterThanOrEqualToThreshold"
-      Metrics:
-        - Id: m1
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: QueueName
-                  Value: !Ref "DoneActionsQueueName"
-              Namespace: "AWS/SQS"
-              MetricName: "ApproximateNumberOfMessagesVisible"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Average
-          ReturnData: False
-        - Id: m4
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: TargetGroup
-                  Value: !GetAtt StreamMicroservice.Outputs.TargetGroupName
-              Namespace: "AWS/ApplicationELB"
-              MetricName: "RequestCountPerTarget"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Sum
-          ReturnData: False
-        - Id: m5
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: TargetGroup
-                  Value: !GetAtt StreamMicroservice.Outputs.TargetGroupName
-                - Name: LoadBalancer
-                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
-              Namespace: "AWS/ApplicationELB"
-              MetricName: "HealthyHostCount"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Average
-          ReturnData: False
-        - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100 * m1) / (${ConsumedQueueMessagePerMinute} * m5) )"
-          Label: !Sub "${ProjectName}-stream-event-queue-custom-metric"
-          ReturnData: False
-        - Id: http
-          Expression: !Sub "(100 * m4) / ${AutoscalingThreshold}"
-          Label: !Sub "${ProjectName}-stream-http-custom-metric"
-          ReturnData: False
-        - Id: e1
-          Expression: "IF( code<http, http, code )"
-          Label: !Sub "${ProjectName}-stream-autoscale-custom-metric"
-      EvaluationPeriods: !Ref AutoscalingDataPointM
-      Threshold: 60
-      AlarmActions:
-        - !GetAtt StreamMicroservice.Outputs.ScaleUpPolicy
-      OKActions:
-        - !GetAtt StreamMicroservice.Outputs.ScaleDownPolicy
+          - - !Ref StreamNotificationTableName
+            - !Ref StreamsTableName
+            - !Ref EventsTableName
 
 Outputs:
   #

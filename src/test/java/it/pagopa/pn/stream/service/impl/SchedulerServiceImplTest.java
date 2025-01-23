@@ -43,7 +43,7 @@ class SchedulerServiceImplTest {
                 .type(StreamEventType.REGISTER_EVENT)
                 .build();
 
-        schedulerService.scheduleWebhookEvent("01", "02", 4, StreamEventType.REGISTER_EVENT);
+        schedulerService.scheduleStreamEvent("01", "02", 4, StreamEventType.REGISTER_EVENT);
 
         Mockito.verify(streamsPool, Mockito.times(1)).scheduleFutureAction(action);
     }

@@ -2,8 +2,7 @@
 
 echo "### CREATE QUEUES ###"
 
-queues="pn-delivery_push_to_stream"
-
+queues="pn-stream_actions pn-delivery_push_to_stream"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
 
     echo creating queue $qn ...
@@ -20,7 +19,7 @@ echo " - Create pn-stream TABLES"
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name WebhookStreams  \
+    --table-name pn-WebhookStreams  \
     --attribute-definitions \
         AttributeName=hashKey,AttributeType=S \
         AttributeName=sortKey,AttributeType=S \
@@ -32,7 +31,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name WebhookEvents  \
+    --table-name pn-WebhookEvents  \
     --attribute-definitions \
         AttributeName=hashKey,AttributeType=S \
         AttributeName=sortKey,AttributeType=S \
@@ -44,12 +43,13 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name WebhookNotification  \
+    --table-name pn-streamNotification  \
     --attribute-definitions \
-        AttributeName=hashkey,AttributeType=S \
+        AttributeName=hashKey,AttributeType=S \
     --key-schema \
-        AttributeName=hashkey,KeyType=HASH \
+        AttributeName=hashKey,KeyType=HASH \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5
+
 
 echo "Initialization terminated"

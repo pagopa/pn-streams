@@ -35,6 +35,10 @@ Parameters:
     Type: Number
     Default: 14
 
+  LogsKinesisSourceStreamArn:
+    Type: String
+    Description: 'Where to send Logs'
+
 Resources:
 
   NotificationStreamManagerLambdaLogGroup:
@@ -48,7 +52,7 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogGroupPrefix: /aws/lambda
 
-  DoneActionsQueue:
+  EventQueue:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
@@ -62,14 +66,28 @@ Resources:
         DelaySeconds: 1
 
   # internal queues DLQ
-  WebhookEventManagerDLQ:
+  NotificationStreamManagerDLQ:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
       Parameters:
-        QueueName: !Sub '${ProjectName}-stream_Webhook_DLQ'
+        QueueName: !Sub '${ProjectName}-notification_stream_manager_DLQ'
+        DelaySeconds: 1
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        HasDLQ: "false"
+        QueueHasAlarm: "true"
+
+  # internal queues DLQ
+  StreamEventManagerDLQ:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-stream_event_manager_DLQ'
         DelaySeconds: 1
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
         HasDLQ: "false"
@@ -77,12 +95,12 @@ Resources:
 
 
   # Webhook Notification Table
-  WebhookNotificationTable:
+  StreamNotificationTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
-      TableName: !Sub '${ProjectName}-webhookNotification'
+      TableName: !Sub '${ProjectName}-streamNotification'
       AttributeDefinitions:
         - AttributeName: "hashKey"
           AttributeType: "S"
@@ -96,45 +114,92 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  PnStreamLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/log-group.yaml"
+      Parameters:
+        LogGroupName: !Sub '${ProjectName}-stream'
+        LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
+        LogGroupRetention: !Ref LogRetention
+
+  # Internal queues
+  ScheduledActionsQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-stream_actions'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 60
+        MaxReceiveCount: 10
+        DelaySeconds: 1
+
 Outputs:
 
-  WebhookNotificationTableName:
+  StreamNotificationTableName:
     Description: Name of dynamodb table containing
-    Value: !Ref WebhookNotificationTable
-  WebhookNotificationTableArn:
+    Value: !Ref StreamNotificationTable
+  StreamNotificationTableArn:
     Description: ARN of dynamodb table containing
-    Value: !Sub '${WebhookNotificationTable.Arn}'
+    Value: !Sub '${StreamNotificationTable.Arn}'
 
-  # Already Done Actions
-  DoneActionsQueueName:
-    Value: !GetAtt DoneActionsQueue.Outputs.QueueName
+  # Event queue
+  EventQueueName:
+    Value: !GetAtt EventQueue.Outputs.QueueName
     Description: pn-delivery-push actions done queue name
-  DoneActionsQueueURL:
-    Value: !GetAtt DoneActionsQueue.Outputs.QueueURL
+  EventQueueURL:
+    Value: !GetAtt EventQueue.Outputs.QueueURL
     Description: pn-delivery-push actions done queue URL
-  DoneActionsQueueARN:
-    Value: !GetAtt DoneActionsQueue.Outputs.QueueARN
+  EventQueueARN:
+    Value: !GetAtt EventQueue.Outputs.QueueARN
     Description: pn-delivery-push actions done queue ARN
-  DoneActionsQueueAlarmARN:
-    Value: !GetAtt DoneActionsQueue.Outputs.SqsDLQAlarmArn
+  EventQueueAlarmARN:
+    Value: !GetAtt EventQueue.Outputs.SqsDLQAlarmArn
     Description: pn-delivery-push actions done queue dlq alarm ARN
-  DoneActionsQueueAgeAlarmARN:
-    Value: !GetAtt DoneActionsQueue.Outputs.SqsAgeAlarmArn
+  EventQueueAgeAlarmARN:
+    Value: !GetAtt EventQueue.Outputs.SqsAgeAlarmArn
     Description: pn-delivery-push actions done queue age alarm ARN
+
+  ScheduledActionsQueueName:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueName
+    Description: pn-delivery-push actions queue name
+  ScheduledActionsQueueARN:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueARN
+    Description: pn-delivery-push actions queue ARN
+  ScheduledActionsQueueAlarmARN:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.SqsDLQAlarmArn
+    Description: pn-delivery-push actions queue dlq alarm queue
+  ScheduledActionsQueueAgeAlarmARN:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.SqsAgeAlarmArn
+    Description: pn-delivery-push actions queue age alarm ARN
 
   NotificationStreamManagerLambdaName:
     Value: !Sub "${ProjectName}-notificationStreamManagerLambda"
+  StreamEventManagerLambdaName:
+    Value: !Sub "${ProjectName}-streamEventManagerLambda"
 
-  # Webhook Step Manager DLQ
-  WebhookEventManagerDLQName:
-    Value: !GetAtt WebhookEventManagerDLQ.Outputs.QueueName
+  # Stream Step Manager DLQ
+  NotificationStreamManagerName:
+    Value: !GetAtt NotificationStreamManagerDLQ.Outputs.QueueName
     Description: pn-delivery-push_webhook_event_manager_DLQ queue name
-  WebhookEventManagerDLQURL:
-    Value: !GetAtt WebhookEventManagerDLQ.Outputs.QueueURL
+  NotificationStreamManagerDLQURL:
+    Value: !GetAtt NotificationStreamManagerDLQ.Outputs.QueueURL
     Description: pn-delivery-push_webhook_event_manager_DLQ queue URL
-  WebhookEventManagerDLQARN:
-    Value: !GetAtt WebhookEventManagerDLQ.Outputs.QueueARN
+  NotificationStreamManagerDLQARN:
+    Value: !GetAtt NotificationStreamManagerDLQ.Outputs.QueueARN
     Description: pn-delivery-push_webhook_event_manager_DLQ queue ARN
-  WebhookEventManagerDLQAlarmARN:
-    Value: !GetAtt WebhookEventManagerDLQ.Outputs.SqsDLQAlarmArn
+  NotificationStreamManagerDLQAlarmARN:
+    Value: !GetAtt NotificationStreamManagerDLQ.Outputs.SqsDLQAlarmArn
     Description: pn-delivery-push_webhook_event_manager_DLQ alarm ARN
+
+  StreamEventManagerDLQARN:
+    Value: !GetAtt StreamEventManagerDLQ.Outputs.QueueARN
+    Description: pn-stream_event_manager_DLQ queue ARN
+
+  EcsLogGroup:
+    Value: !GetAtt PnStreamLogGroup.Outputs.LogGroupName

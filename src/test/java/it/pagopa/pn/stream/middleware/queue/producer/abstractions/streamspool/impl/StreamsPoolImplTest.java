@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 class StreamsPoolImplTest {
@@ -31,7 +30,6 @@ class StreamsPoolImplTest {
     @Test
     void scheduleFutureAction() {
 
-        String uuid = UUID.randomUUID().toString();
 
         Instant instant = Instant.parse("2021-09-16T15:23:00.00Z");
 
@@ -44,7 +42,6 @@ class StreamsPoolImplTest {
     }
 
     private StreamAction buildWebhookAction() {
-        Instant instant = Instant.parse("2021-09-16T15:23:00.00Z");
 
         return StreamAction.builder()
                 .streamId("001")
@@ -56,13 +53,6 @@ class StreamsPoolImplTest {
     }
 
     private static <T> ArgumentMatcher<T> matches(Predicate<T> predicate) {
-        return new ArgumentMatcher<T>() {
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public boolean matches(Object argument) {
-                return predicate.test((T) argument);
-            }
-        };
+        return predicate::test;
     }
 }

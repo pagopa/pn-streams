@@ -1,14 +1,15 @@
 package it.pagopa.pn.stream.service.mapper;
 
-import it.pagopa.pn.stream.dto.timeline.details.TimelineElementCategoryInt;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.ProgressResponseElementV25;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.RefusedReasonEntity;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.ProgressResponseElementV26;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.RefusedReasonEntity;
 import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static it.pagopa.pn.stream.generated.openapi.server.v1.dto.TimelineElementCategoryV26.REQUEST_REFUSED;
 
 class ProgressResponseElementMapperTest {
 
@@ -25,10 +26,10 @@ class ProgressResponseElementMapperTest {
         EventEntity eventEntity = new EventEntity();
         eventEntity.setEventId(Instant.now() + "_" + "timeline_event_id");
         eventEntity.setTimestamp(Instant.now());
-        eventEntity.setTimelineEventCategory(TimelineElementCategoryInt.REQUEST_REFUSED.getValue());
+        eventEntity.setTimelineEventCategory(REQUEST_REFUSED.getValue());
 
         eventEntity.setValidationErrors( List.of(refusedReasonEntity) );
-        ProgressResponseElementV25 progressResponseElement = ProgressResponseElementMapper.internalToExternal(eventEntity);
+        ProgressResponseElementV26 progressResponseElement = ProgressResponseElementMapper.internalToExternal(eventEntity);
 
         Assertions.assertEquals( ERROR_CODE, progressResponseElement.getValidationErrors().get( 0 ).getErrorCode() );
         Assertions.assertEquals( DETAIL, progressResponseElement.getValidationErrors().get( 0 ).getDetail() );

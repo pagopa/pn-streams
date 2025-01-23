@@ -33,23 +33,6 @@ public class PnDataVaultClientReactiveImpl extends CommonBaseClient implements P
             maxAttempts = 3,
             backoff = @Backoff(random = true, delay = 500, maxDelay = 1000, multiplier = 2)
     )
-    public Flux<BaseRecipientDto> getRecipientsDenominationByInternalId(List<String> listInternalId) {
-        log.logInvokingExternalService(CLIENT_NAME, GET_RECIPIENT_DENOMINATION);
-        log.debug("Start call getRecipientDenominationByInternalId - listInternalId={}", listInternalId);
-
-        return recipientsApi.getRecipientDenominationByInternalId(listInternalId)
-                .onErrorResume( err -> {
-                    log.error("Exception invoking getRecipientDenominationByInternalId with internalId list={} err ",listInternalId, err);
-                    return Mono.error(new PnInternalException("Exception invoking getRecipientDenominationByInternalId ", ERROR_CODE_STREAM_UPDATEMETAFILEERROR, err));
-                });
-    }
-
-    @Override
-    @Retryable(
-            value = {PnInternalException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(random = true, delay = 500, maxDelay = 1000, multiplier = 2)
-    )
     public Flux<ConfidentialTimelineElementDto> getNotificationTimelines(List<ConfidentialTimelineElementId> confidentialTimelineElementId) {
         log.logInvokingExternalService(CLIENT_NAME, NOTIFICATION_TIMELINES_ADDRESS);
         return notificationApi.getNotificationTimelines(confidentialTimelineElementId)
@@ -57,13 +40,5 @@ public class PnDataVaultClientReactiveImpl extends CommonBaseClient implements P
                     log.error("Exception invoking getNotificationTimelines with confidentialTimelineElementId list={} err ", confidentialTimelineElementId, err);
                     return Mono.error(new PnInternalException("Exception invoking getNotificationTimelines ", ERROR_CODE_DATAVAULT_FAILED, err));
                 });
-    }
-
-    @Override
-    public Mono<Void> updateNotificationAddressesByIun(String iun, Boolean normalized, List<NotificationRecipientAddressesDto> list) {
-        log.logInvokingExternalService(CLIENT_NAME, UPDATE_NOTIFICATION_ADDRESS);
-
-        return notificationApi.updateNotificationAddressesByIun(iun, normalized, list)
-                .doOnSuccess( res -> log.debug("Received sync response from {} for {}", CLIENT_NAME, UPDATE_NOTIFICATION_ADDRESS));
     }
 }
