@@ -170,12 +170,26 @@ Parameters:
     Type: String
     Description: actions queue ARN
 
+  EventQueueURL:
+    Type: String
+    Description: actions queue URL
+
   NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds:
     Type: Number
     Default: 20
     Description: Batching window size for lambda triggering
 
+  StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
+    Type: Number
+    Default: 20
+    Description: Batching window size for lambda triggering
+
   NotificationStreamManagerLambdaBatchSize:
+    Type: Number
+    Default: 60
+    Description: Batch size for lambda triggering
+
+  StreamEventManagerLambdaBatchSize:
     Type: Number
     Default: 60
     Description: Batch size for lambda triggering
@@ -192,9 +206,24 @@ Parameters:
     Type: String
     Description: 'Name of dynamodb table containing stream notifications'
 
+  StreamNotificationTtl:
+    Type: Number
+    Description: 'TTL offset for stream notifications'
+    Default: 7889400
+
   StreamNotificationTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing stream notifications'
+
+  StartReadStreamTimestamp:
+    Type: String
+    Description: 'Start timestamp for read stream'
+    Default: "1999-01-01T00:00:00Z"
+
+  StopReadStreamTimestamp:
+    Type: String
+    Description: 'Stop timestamp for read stream'
+    Default: "2099-01-01T00:00:00Z"
 
   StreamsTableName:
     Type: String
@@ -261,20 +290,17 @@ Parameters:
     Default: 'false'
     AllowedValues: [ true, false ]
 
+  StreamEventManagerLambdaName:
+    Type: String
+    Description: 'Name of the lambda function that manages the stream events'
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'ARN of the DLQ queue for stream event manager lambda'
+
   PnTimelinesTableName:
     Type: String
-    Default: 'pn-Timelines'
-    Description: 'Name of dynamodb table containing timelines'
-
-  StartReadStreamTimestamp:
-    Type: String
-    Description: 'Start timestamp for read stream'
-    Default: "1999-01-01T00:00:00Z"
-
-  StopReadStreamTimestamp:
-    Type: String
-    Description: 'Stop timestamp for read stream'
-    Default: "2099-01-01T00:00:00Z"
+    Description: 'Name of dynamodb table containing'
 
 Resources:
 
@@ -338,6 +364,10 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
             Resource:
               - !Sub "${StreamsTableArn}"
               - !Sub "${StreamsTableArn}/*"
@@ -380,7 +410,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          QUEUE_URL: !Ref DoneActionsQueueURL
+          QUEUE_URL: !Ref EventQueueURL
           START_READ_STREAM_TIMESTAMP: !Sub '${StartReadStreamTimestamp}'
           STOP_READ_STREAM_TIMESTAMP: !Sub '${StopReadStreamTimestamp}'
       TracingConfig:
@@ -436,15 +466,8 @@ Resources:
               - sqs:GetQueueUrl
               - sqs:SendMessage
             Resource:
-              !Ref DoneActionsQueueARN
-          - Effect: Allow
-            Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:GetQueueAttributes
-              - sqs:GetQueueUrl
-              - sqs:SendMessage
-            Resource:
-              !Ref StreamEventManagerDLQARN
+              - !Ref EventQueueARN
+              - !Ref StreamEventManagerDLQARN
 
 
   # CDC to Stream Event Manager
@@ -464,7 +487,7 @@ Resources:
           Destination: !Ref StreamEventManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: !Sub '{"tableName": [${PnTimelinesTableName}], "eventName": ["INSERT"]}'
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnTimelinesTableName}"]}'
 
   StreamEventManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -492,6 +515,8 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
+          TABLE_NAME: !Sub '${StreamNotificationTableName}'
+          TTL_OFFSET: !Sub '${StreamNotificationTtl}'
       TracingConfig:
         Mode: Active
       Layers:
@@ -596,6 +621,7 @@ Resources:
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
+            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
         DynamoDBTableNames: !Join
           - ','
           - - !Ref StreamNotificationTableName

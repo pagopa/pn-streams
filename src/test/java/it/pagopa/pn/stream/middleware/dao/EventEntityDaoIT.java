@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class EventEntitDaoIT extends BaseTest.WithLocalStack{
+class EventEntityDaoIT extends BaseTest.WithLocalStack{
 
     @Autowired
     EventEntityDao eventEntityDao;

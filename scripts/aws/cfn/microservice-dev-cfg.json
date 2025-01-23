@@ -1,5 +1,7 @@
 {
   "Parameters" : {
+    "StartReadStreamTimestamp": "2099-01-01T00:00:00Z",
+    "StopReadStreamTimestamp": "2099-12-01T00:00:00Z",
     "StreamEventManagerLambdaMaximumBatchingWindowInSeconds": "20",
     "StreamEventManagerLambdaBatchSize": "60",
     "StreamsTableName": "pn-WebhookStreams",
@@ -13,7 +15,6 @@
     "MaxStreams": "10",
     "RetryParameterPrefix": "/pn-stream/retry/",
     "RetryAfterEnabled": "false",
-    "StartReadStreamTimestamp": "1999-01-01T00:00:00Z",
-    "StopReadStreamTimestamp": "2099-01-01T00:00:00Z"
+    "StreamNotificationTtl": "7889400"
   }
 }

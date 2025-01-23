@@ -1,13 +1,12 @@
-const { parseKinesisObjToJsonObj } = require("./utils");
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const crypto = require('crypto');
 
-
-exports.mapEvents = async (events) => {
+exports.mapEvents = (events) => {
   let result = [];
 
   for (let i = 0; i < events.length; i++) {
 
-    let timelineObj = parseKinesisObjToJsonObj(events[i].dynamodb.NewImage);
+    let timelineObj = unmarshall(events[i].dynamodb.NewImage);
 
     let date = new Date();
 
@@ -30,7 +29,7 @@ exports.mapEvents = async (events) => {
         DataType: 'String',
         StringValue: crypto.randomUUID()
       },
-       
+
       createdAt: {
         DataType: 'String',
         StringValue: date.toISOString()
