@@ -23,13 +23,12 @@ exports.mapEvents = (events) => {
       },
       iun: {
         DataType: 'String',
-        StringValue: action.event.iun
+        StringValue: timelineObj.iun
       },
       eventId: {
         DataType: 'String',
         StringValue: crypto.randomUUID()
       },
-
       createdAt: {
         DataType: 'String',
         StringValue: date.toISOString()

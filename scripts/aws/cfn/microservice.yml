@@ -218,7 +218,7 @@ Parameters:
   StartReadStreamTimestamp:
     Type: String
     Description: 'Start timestamp for read stream'
-    Default: "1999-01-01T00:00:00Z"
+    Default: "2099-01-01T00:00:00Z"
 
   StopReadStreamTimestamp:
     Type: String
