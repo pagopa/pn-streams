@@ -8,8 +8,4 @@ import reactor.core.publisher.Mono;
 public interface StreamEventsService {
 
     Mono<ProgressResponseElementDto> consumeEventStream(String xPagopaPnCxId, List<String> xPagopaPnCxGroups, String xPagopaPnApiVersion, UUID streamId, String lastEventId);
-
-    Mono<Void> saveEvent(String paId, String eventId, String iun);
-
-    Mono<Void> purgeEvents(String streamId, String eventId, boolean olderThan);
 }

@@ -2,8 +2,7 @@
 
 echo "### CREATE QUEUES ###"
 
-queues="pn-delivery_push_to_stream"
-
+queues="pn-stream_actions pn-delivery_push_to_stream"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
 
     echo creating queue $qn ...

@@ -2,10 +2,17 @@
   "Parameters" : {
     "StreamEventManagerLambdaMaximumBatchingWindowInSeconds": "20",
     "StreamEventManagerLambdaBatchSize": "60",
-    "NotificationEventManagerLambdaMaximumBatchingWindowInSeconds": "20",
-    "NotificationEventManagerLambdaBatchSize": "60",
-    "PnNotificationTableName": "pn-Notification",
-    "PnTimelinesTableName": "pn-Timelines",
+    "StreamsTableName": "pn-WebhookStreams",
+    "StreamsTableArn": "arn:aws:dynamodb:eu-south-1:830192246553:table/pn-WebhookStreams",
+    "EventsTableName": "pn-WebhookEvents",
+    "EventsTableArn": "arn:aws:dynamodb:eu-south-1:830192246553:table/pn-WebhookEvents",
+    "PnNotificationTableName": "pn-Notifications",
+    "MemoryAmount": "2GB",
+    "ScheduleInterval": "60000",
+    "MaxLength": "50",
+    "MaxStreams": "10",
+    "RetryParameterPrefix": "/pn-stream/retry/",
+    "RetryAfterEnabled": "false",
     "StartReadStreamTimestamp": "1999-01-01T00:00:00Z",
     "StopReadStreamTimestamp": "2099-01-01T00:00:00Z"
   }

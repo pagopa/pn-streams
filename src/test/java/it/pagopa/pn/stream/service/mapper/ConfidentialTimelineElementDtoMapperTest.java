@@ -10,13 +10,6 @@ import org.junit.jupiter.api.Test;
 
 class ConfidentialTimelineElementDtoMapperTest {
 
-    @Test
-    void internalToExternal() {
-
-        ConfidentialTimelineElementDto actual = ConfidentialTimelineElementDtoMapper.internalToExternal(buildConfidentialTimelineElementDtoInt());
-
-        Assertions.assertEquals(buildConfidentialTimelineElementDto(), actual);
-    }
 
     @Test
     void externalToInternal() {

@@ -2,11 +2,10 @@ package it.pagopa.pn.stream.rest;
 
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnNotFoundException;
-import it.pagopa.pn.stream.generated.openapi.server.stream.v1.dto.*;
-import it.pagopa.pn.stream.middleware.dao.webhook.StreamEntityDao;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.middleware.dao.dynamo.StreamEntityDao;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.stream.service.StreamsService;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,7 +25,7 @@ import java.util.UUID;
 @WebFluxTest(PnStreamsController.class)
 class PnStreamsControllerTest {
 
-    public static final String API_VERSION = "v2.5";
+    public static final String API_VERSION = "v2.6";
     @Autowired
     WebTestClient webTestClient;
 
@@ -39,16 +38,16 @@ class PnStreamsControllerTest {
     @Test
     void createEventStreamOk() {
         Mockito.when(service.createEventStream(Mockito.anyString(),Mockito.anyString(), Mockito.any(),Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new StreamMetadataResponseV25()));
-        StreamCreationRequestV25 request = StreamCreationRequestV25.builder()
-                .eventType(StreamCreationRequestV25.EventTypeEnum.STATUS)
+                .thenReturn(Mono.just(new StreamMetadataResponseV26()));
+        StreamCreationRequestV26 request = StreamCreationRequestV26.builder()
+                .eventType(StreamCreationRequestV26.EventTypeEnum.STATUS)
                 .build();
 
         webTestClient.post()
-                .uri("/delivery-progresses/" + API_VERSION + "/streams")
+                .uri("/delivery-progresses-2/" + API_VERSION + "/streams")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.ACCEPT, "application/json")
-                .body(Mono.just(request), StreamCreationRequestV25.class)
+                .body(Mono.just(request), StreamCreationRequestV26.class)
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
                     httpHeaders.set("x-pagopa-pn-cx-type", CxTypeAuthFleet.PA.getValue());
@@ -57,7 +56,7 @@ class PnStreamsControllerTest {
                 })
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(StreamMetadataResponseV25.class);
+                .expectBody(StreamMetadataResponseV26.class);
 
         Mockito.verify(service).createEventStream(Mockito.anyString(),Mockito.anyString(), Mockito.any(),Mockito.any(), Mockito.any());
     }
@@ -68,7 +67,7 @@ class PnStreamsControllerTest {
                 .thenThrow(new RuntimeException());
 
         webTestClient.post()
-                .uri("/delivery-progresses/" + API_VERSION + "/streams")
+                .uri("/delivery-progresses-2/" + API_VERSION + "/streams")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
@@ -97,7 +96,7 @@ class PnStreamsControllerTest {
             .thenReturn(Mono.error(new PnNotFoundException("","","")));
 
         webTestClient.delete()
-            .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+            .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
             .header(HttpHeaders.ACCEPT, "application/problem+json")
             .headers(httpHeaders -> {
                 httpHeaders.set("x-pagopa-pn-uid","test");
@@ -120,7 +119,7 @@ class PnStreamsControllerTest {
                 .thenReturn(Mono.empty());
 
         webTestClient.delete()
-                .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+                .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/problem+json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -145,7 +144,7 @@ class PnStreamsControllerTest {
             .thenReturn(Mono.empty());
 
         webTestClient.post()
-            .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}/action/disable").replace("{streamId}", streamId) )
+            .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}/action/disable").replace("{streamId}", streamId) )
             .header(HttpHeaders.ACCEPT, "application/problem+json")
             .headers(httpHeaders -> {
                 httpHeaders.set("x-pagopa-pn-uid","test");
@@ -166,7 +165,7 @@ class PnStreamsControllerTest {
                 .thenThrow(new NullPointerException());
 
         webTestClient.delete()
-                .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+                .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -189,10 +188,10 @@ class PnStreamsControllerTest {
     void getEventStream() {
         String streamId = UUID.randomUUID().toString();
         Mockito.when(service.getEventStream(Mockito.anyString(),Mockito.anyString(), Mockito.any(),Mockito.any(), Mockito.any(UUID.class)))
-                .thenReturn(Mono.just(new StreamMetadataResponseV25()));
+                .thenReturn(Mono.just(new StreamMetadataResponseV26()));
 
         webTestClient.get()
-                .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+                .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -202,7 +201,7 @@ class PnStreamsControllerTest {
                 })
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(StreamMetadataResponseV25.class);
+                .expectBody(StreamMetadataResponseV26.class);
 
         Mockito.verify(service).getEventStream(Mockito.anyString(),Mockito.anyString(),Mockito.any(), Mockito.any(), Mockito.any(UUID.class));
 
@@ -215,7 +214,7 @@ class PnStreamsControllerTest {
                 .thenThrow(new NullPointerException());
 
         webTestClient.get()
-                .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+                .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -237,7 +236,7 @@ class PnStreamsControllerTest {
     @Test
     void listEventStreams() {
         webTestClient.get()
-                .uri("/delivery-progresses/" + API_VERSION + "/streams")
+                .uri("/delivery-progresses-2/" + API_VERSION + "/streams")
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -257,10 +256,10 @@ class PnStreamsControllerTest {
     void updateEventStream() {
         String streamId = UUID.randomUUID().toString();
         Mockito.when(service.updateEventStream(Mockito.anyString(),Mockito.anyString(),Mockito.any(), Mockito.any(), Mockito.any(UUID.class), Mockito.any()))
-                .thenReturn(Mono.just(new StreamMetadataResponseV25()));
+                .thenReturn(Mono.just(new StreamMetadataResponseV26()));
 
         webTestClient.put()
-                .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+                .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");
@@ -271,7 +270,7 @@ class PnStreamsControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(StreamMetadataResponseV25.class);
+                .expectBody(StreamMetadataResponseV26.class);
 
         Mockito.verify(service).updateEventStream(Mockito.anyString(),Mockito.anyString(),Mockito.any(), Mockito.any(), Mockito.any(UUID.class), Mockito.any());
     }
@@ -283,7 +282,7 @@ class PnStreamsControllerTest {
                 .thenThrow(new NullPointerException());
 
         webTestClient.put()
-                .uri( ("/delivery-progresses/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
+                .uri( ("/delivery-progresses-2/" + API_VERSION + "/streams/{streamId}").replace("{streamId}", streamId) )
                 .header(HttpHeaders.ACCEPT, "application/json")
                 .headers(httpHeaders -> {
                     httpHeaders.set("x-pagopa-pn-uid","test");

@@ -1,7 +1,7 @@
 package it.pagopa.pn.stream.generated.openapi.server.stream.v1.dto;
 
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.PaymentEvent;
-import it.pagopa.pn.stream.generated.openapi.server.webhook.v1.dto.RecipientType;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.PaymentEvent;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.RecipientType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

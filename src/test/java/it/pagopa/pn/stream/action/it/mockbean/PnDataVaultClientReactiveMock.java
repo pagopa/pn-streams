@@ -1,14 +1,13 @@
 package it.pagopa.pn.stream.action.it.mockbean;
 
-import it.pagopa.pn.stream.middleware.externalclient.pnclient.datavault.PnDataVaultClientReactive;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.BaseRecipientDto;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.ConfidentialTimelineElementDto;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.ConfidentialTimelineElementId;
 import it.pagopa.pn.stream.generated.openapi.msclient.datavault.model.NotificationRecipientAddressesDto;
+import it.pagopa.pn.stream.middleware.externalclient.pnclient.datavault.PnDataVaultClientReactive;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,30 +26,11 @@ public class PnDataVaultClientReactiveMock implements PnDataVaultClientReactive 
     public void insertBaseRecipientDto(BaseRecipientDto dto){
         confidentialMap.put(dto.getInternalId(), dto);
     }
-    
-    @Override
-    public Flux<BaseRecipientDto> getRecipientsDenominationByInternalId(List<String> listInternalId) {
-        return Flux.fromStream(listInternalId.stream()
-                .filter( internalId -> confidentialMap.get(internalId) != null)
-                .map(internalId -> confidentialMap.get(internalId)));
-    }
+
 
     @Override
     public Flux<ConfidentialTimelineElementDto> getNotificationTimelines(List<ConfidentialTimelineElementId> confidentialTimelineElementId) {
         return null;
-    }
-
-    @Override
-    public Mono<Void> updateNotificationAddressesByIun(String iun, Boolean normalized, List<NotificationRecipientAddressesDto> list) {
-        return Mono.fromRunnable( () -> {
-            int recIndex = 0;
-            for (NotificationRecipientAddressesDto recNormAddress : list ){
-                String key = getKey(iun, recIndex);
-                normalizedAddress.put(key, recNormAddress);
-                log.info("[TEST] normalized address isert is {}", recNormAddress);
-                recIndex ++;
-            } 
-        }).flatMap( res-> Mono.empty());
     }
 
     @NotNull

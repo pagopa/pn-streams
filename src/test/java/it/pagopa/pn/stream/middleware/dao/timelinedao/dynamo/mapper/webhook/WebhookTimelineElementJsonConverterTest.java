@@ -47,7 +47,6 @@ class WebhookTimelineElementJsonConverterTest {
                 "notificationSentAt":null,
                 "paId":null,
                 "legalFactIds":[],
-                "details":null,
                 "category":"SENDER_ACK_CREATION_REQUEST",
                 "ingestionTimestamp":"2025-02-09T15:30:00Z",
                 "timestamp":"2024-02-09T15:30:00Z",
@@ -185,13 +184,13 @@ class WebhookTimelineElementJsonConverterTest {
         // Mock del TimelineElementEntity
         WebhookTimelineElementEntity entity = Mockito.mock(WebhookTimelineElementEntity.class);
 
-        WebhookTimelineElementJsonConverter converter = mock(WebhookTimelineElementJsonConverter.class);
+        WebhookTimelineElementJsonConverter converterMock = mock(WebhookTimelineElementJsonConverter.class);
 
         // Stub della chiamata al metodo entityToJson per lanciare un'eccezione
-        doThrow(new PnInternalException("Errore", ERROR_CODE_PN_GENERIC_ERROR)).when(converter).entityToJson(entity);
+        doThrow(new PnInternalException("Errore", ERROR_CODE_PN_GENERIC_ERROR)).when(converterMock).entityToJson(entity);
 
         // Verifica che chiamando il metodo si lanci un'eccezione
-        assertThrows(PnInternalException.class, () -> converter.entityToJson(entity));
+        assertThrows(PnInternalException.class, () -> converterMock.entityToJson(entity));
     }
 
 }
