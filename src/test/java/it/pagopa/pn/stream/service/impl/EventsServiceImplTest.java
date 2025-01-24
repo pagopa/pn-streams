@@ -117,6 +117,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
 
@@ -129,6 +130,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
         EventEntityBatch eventEntityBatch = new EventEntityBatch();
@@ -203,6 +205,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
 
@@ -215,6 +218,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
         EventEntityBatch eventEntityBatch = new EventEntityBatch();
@@ -324,6 +328,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
 
@@ -336,6 +341,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
         EventEntityBatch eventEntityBatch = new EventEntityBatch();
@@ -466,6 +472,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
 
@@ -478,6 +485,7 @@ class EventsServiceImplTest {
         eventEntity.setIun("");
         eventEntity.setNotificationRequestId("");
         eventEntity.setStreamId(uuid);
+        eventEntity.setEventDescription("2025-01-17T15:51:42.217434925Z_SEND_DIGITAL_FEEDBACK.IUN_DHZW-LJLR-RKXT-202501-D-1.RECINDEX_0.SOURCE_PLATFORM.REPEAT_false.ATTEMPT_0");
         list.add(eventEntity);
 
         EventEntityBatch eventEntityBatch = new EventEntityBatch();

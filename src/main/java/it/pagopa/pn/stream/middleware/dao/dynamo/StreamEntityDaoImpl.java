@@ -33,7 +33,7 @@ import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.ke
 
 @Component
 @Slf4j
-public class StreamEntityDaoDynamo implements StreamEntityDao {
+public class StreamEntityDaoImpl implements StreamEntityDao {
 
     private final DynamoDbAsyncTable<StreamEntity> table;
     private final DynamoDbAsyncTable<WebhookStreamRetryAfter> tableRetry;
@@ -41,7 +41,7 @@ public class StreamEntityDaoDynamo implements StreamEntityDao {
     private final DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient;
     private final PnStreamConfigs pnStreamConfigs;
 
-    public StreamEntityDaoDynamo(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, DynamoDbAsyncClient dynamoDbAsyncClient, PnStreamConfigs cfg) {
+    public StreamEntityDaoImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, DynamoDbAsyncClient dynamoDbAsyncClient, PnStreamConfigs cfg) {
         this.table = dynamoDbEnhancedClient.table(cfg.getDao().getStreamsTableName(), TableSchema.fromBean(StreamEntity.class));
         this.tableRetry = dynamoDbEnhancedClient.table(cfg.getDao().getStreamsTableName(), TableSchema.fromBean(WebhookStreamRetryAfter.class));
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;

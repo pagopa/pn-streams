@@ -46,15 +46,3 @@ node_modules/
 .nyc_output/
 coverage/
 .scannerwork
-
-# Node.js
-node_modules/
-.nyc_output/
-coverage/
-.scannerwork
-
-# Node.js
-node_modules/
-.nyc_output/
-coverage/
-.scannerwork

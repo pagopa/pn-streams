@@ -19,7 +19,7 @@ echo " - Create pn-stream TABLES"
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name WebhookStreams  \
+    --table-name pn-WebhookStreams  \
     --attribute-definitions \
         AttributeName=hashKey,AttributeType=S \
         AttributeName=sortKey,AttributeType=S \
@@ -31,13 +31,23 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name WebhookEvents  \
+    --table-name pn-WebhookEvents  \
     --attribute-definitions \
         AttributeName=hashKey,AttributeType=S \
         AttributeName=sortKey,AttributeType=S \
     --key-schema \
         AttributeName=hashKey,KeyType=HASH \
         AttributeName=sortKey,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=10,WriteCapacityUnits=5
+
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name pn-streamNotification  \
+    --attribute-definitions \
+        AttributeName=hashKey,AttributeType=S \
+    --key-schema \
+        AttributeName=hashKey,KeyType=HASH \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5
 
