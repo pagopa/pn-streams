@@ -2,7 +2,7 @@ package it.pagopa.pn.stream.service.impl;
 
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.config.springbootcfg.SsmParameterConsumerActivation;
+import it.pagopa.pn.stream.config.springbootcfg.AbstractCachedSsmParameterConsumerActivation;
 import it.pagopa.pn.stream.dto.address.PhysicalAddressInt;
 import it.pagopa.pn.stream.dto.ext.datavault.ConfidentialTimelineElementDtoInt;
 import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
@@ -63,7 +63,7 @@ class EventsServiceImplTest {
     @Mock
     private SchedulerService schedulerService;
     @Mock
-    private SsmParameterConsumerActivation ssmParameterConsumerActivation;
+    private AbstractCachedSsmParameterConsumerActivation ssmParameterConsumerActivation;
     @Mock
     private StreamUtils webhookUtils;
     @Mock

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
-import it.pagopa.pn.stream.config.springbootcfg.SsmParameterConsumerActivation;
+import it.pagopa.pn.stream.config.springbootcfg.AbstractCachedSsmParameterConsumerActivation;
 import it.pagopa.pn.stream.dto.stream.CustomRetryAfterParameter;
 import it.pagopa.pn.stream.dto.stream.EventTimelineInternalDto;
 import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
@@ -48,7 +48,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     private final TimelineService timelineService;
     private final ConfidentialInformationService confidentialInformationService;
 
-    private final SsmParameterConsumerActivation ssmParameterConsumerActivation;
+    private final AbstractCachedSsmParameterConsumerActivation ssmParameterConsumerActivation;
     private static final String LOG_MSG_JSON_COMPRESSION = "Error while compressing timeline elements into JSON for the audit";
 
 
@@ -56,7 +56,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                                    SchedulerService schedulerService, StreamUtils streamUtils,
                                    PnStreamConfigs pnStreamConfigs, TimelineService timeLineService,
                                    ConfidentialInformationService confidentialInformationService,
-                                   SsmParameterConsumerActivation ssmParameterConsumerActivation) {
+                                   AbstractCachedSsmParameterConsumerActivation ssmParameterConsumerActivation) {
         super(streamEntityDao, pnStreamConfigs);
         this.eventEntityDao = eventEntityDao;
         this.schedulerService = schedulerService;
@@ -206,15 +206,15 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                 .toList();
 
         return confidentialInformationService.getTimelineConfidentialInformation(timelineElementInternals)
-                .map(confidentialInfo -> {
-                    // cerco l'elemento in TimelineElementInternals con elementiId
-                    TimelineElementInternal internal = timelineElementInternals.stream()
+                .map(confidentialInfo -> timelineElementInternals.stream()
                             .filter(i -> i.getElementId().equals(confidentialInfo.getTimelineElementId()))
                             .findFirst()
-                            .get();
-                    timelineService.enrichTimelineElementWithConfidentialInformation(internal.getDetails(), confidentialInfo);
-                    return internal;
-                })
+                            .map(timelineElementInternal -> {
+                                timelineElementInternal.setDetails(timelineService.enrichTimelineElementWithConfidentialInformation(timelineElementInternal.getDetails(), confidentialInfo));
+                                return timelineElementInternal;
+                            })
+                            .orElse(null)
+                )
                 .collectList()
                 .flatMapMany(item -> Flux.fromStream(eventEntities.stream()));
     }

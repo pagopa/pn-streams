@@ -170,12 +170,26 @@ Parameters:
     Type: String
     Description: actions queue ARN
 
+  EventQueueURL:
+    Type: String
+    Description: actions queue URL
+
   NotificationStreamManagerLambdaMaximumBatchingWindowInSeconds:
     Type: Number
     Default: 20
     Description: Batching window size for lambda triggering
 
+  StreamEventManagerLambdaMaximumBatchingWindowInSeconds:
+    Type: Number
+    Default: 20
+    Description: Batching window size for lambda triggering
+
   NotificationStreamManagerLambdaBatchSize:
+    Type: Number
+    Default: 60
+    Description: Batch size for lambda triggering
+
+  StreamEventManagerLambdaBatchSize:
     Type: Number
     Default: 60
     Description: Batch size for lambda triggering
@@ -192,25 +206,40 @@ Parameters:
     Type: String
     Description: 'Name of dynamodb table containing stream notifications'
 
+  StreamNotificationTtl:
+    Type: Number
+    Description: 'TTL offset for stream notifications'
+    Default: 7889400
+
   StreamNotificationTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing stream notifications'
 
+  StartReadStreamTimestamp:
+    Type: String
+    Description: 'Start timestamp for read stream'
+    Default: "1999-01-01T00:00:00Z"
+
+  StopReadStreamTimestamp:
+    Type: String
+    Description: 'Stop timestamp for read stream'
+    Default: "2099-01-01T00:00:00Z"
+
   StreamsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing'
+    Description: 'Name of dynamodb table containing stream'
 
   StreamsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing'
+    Description: 'ARN of dynamodb table containing stream'
 
   EventsTableName:
     Type: String
-    Description: 'Name of dynamodb table containing'
+    Description: 'Name of dynamodb table containing events'
 
   EventsTableArn:
     Type: String
-    Description: 'ARN of dynamodb table containing'
+    Description: 'ARN of dynamodb table containing events'
 
   PnNotificationTableName:
     Type: String
@@ -225,6 +254,7 @@ Parameters:
     Type: String
     Description: 'Time interval between two webhook-scans every scan send notifications
                   update to Public Administration'
+    Default: 60000
 
   ScheduledActionsQueueName:
     Type: String
@@ -257,8 +287,20 @@ Parameters:
   RetryAfterEnabled:
     Type: String
     Description: 'Allow to enable or disable retry after exception'
-    Default: false
+    Default: 'false'
     AllowedValues: [ true, false ]
+
+  StreamEventManagerLambdaName:
+    Type: String
+    Description: 'Name of the lambda function that manages the stream events'
+
+  StreamEventManagerDLQARN:
+    Type: String
+    Description: 'ARN of the DLQ queue for stream event manager lambda'
+
+  PnTimelinesTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing'
 
 Resources:
 
@@ -322,6 +364,10 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
             Resource:
               - !Sub "${StreamsTableArn}"
               - !Sub "${StreamsTableArn}/*"
@@ -347,6 +393,111 @@ Resources:
 
 
   #########################################################
+  ###              StreamEventManagerLambda            ###
+  #########################################################
+
+  # Lambda function
+  StreamEventManagerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref StreamEventManagerLambdaName
+      Runtime: nodejs18.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/streamEventManager.zip"
+      Role: !GetAtt StreamEventManagerLambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          QUEUE_URL: !Ref EventQueueURL
+          START_READ_STREAM_TIMESTAMP: !Sub '${StartReadStreamTimestamp}'
+          STOP_READ_STREAM_TIMESTAMP: !Sub '${StopReadStreamTimestamp}'
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 10
+
+  # Lambda function role
+  StreamEventManagerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-streamEventManagerLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function IAM policy
+  StreamEventManagerLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-StreamEventManagerLambdaPolicy
+      Roles:
+        - !Ref StreamEventManagerLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kinesis:DescribeStream
+              - kinesis:DescribeStreamSummary
+              - kinesis:GetShardIterator
+              - kinesis:GetRecords
+              - kinesis:ListShards
+              - kinesis:ListStreams
+              - kinesis:SubscribeToShard
+            Resource: !Ref CdcKinesisSourceStreamArn
+          - Action: kms:Decrypt
+            Effect: Allow
+            Resource: !Ref CdcKinesisSourceStreamKeyArn
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource:
+              - !Ref EventQueueARN
+              - !Ref StreamEventManagerDLQARN
+
+
+  # CDC to Stream Event Manager
+  StreamEventManagerLambdaKinesisSource:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: !Sub ${StreamEventManagerLambdaBatchSize}
+      BisectBatchOnFunctionError: true
+      EventSourceArn: !Ref CdcKinesisSourceStreamArn
+      FunctionName: !Ref StreamEventManagerLambda
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+      MaximumBatchingWindowInSeconds: !Sub ${StreamEventManagerLambdaMaximumBatchingWindowInSeconds}
+      StartingPosition: TRIM_HORIZON
+      DestinationConfig:
+        OnFailure:
+          Destination: !Ref StreamEventManagerDLQARN
+      FilterCriteria:
+        Filters:
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnTimelinesTableName}"]}'
+
+  StreamEventManagerLambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref StreamEventManagerLambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
+  #########################################################
   ###         NotificationStreamManagerLambda           ###
   #########################################################
 
@@ -364,6 +515,8 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
+          TABLE_NAME: !Sub '${StreamNotificationTableName}'
+          TTL_OFFSET: !Sub '${StreamNotificationTtl}'
       TracingConfig:
         Mode: Active
       Layers:
@@ -468,6 +621,7 @@ Resources:
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-stream'
             - !Sub '/aws/lambda/${NotificationStreamManagerLambdaName}'
+            - !Sub '/aws/lambda/${StreamEventManagerLambdaName}'
         DynamoDBTableNames: !Join
           - ','
           - - !Ref StreamNotificationTableName
