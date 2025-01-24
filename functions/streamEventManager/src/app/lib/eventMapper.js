@@ -11,9 +11,7 @@ exports.mapEvents = (events) => {
     let date = new Date();
 
     let action = {
-      iun: timelineObj.iun,
-      paId: timelineObj.paId,
-      timelineId: timelineObj.timelineElementId, 
+      event: timelineObj,
       eventId: `${date.toISOString()}_${timelineObj.timelineElementId}`,
       type: 'REGISTER_EVENT'
     };
@@ -25,7 +23,7 @@ exports.mapEvents = (events) => {
       },
       iun: {
         DataType: 'String',
-        StringValue: action.iun
+        StringValue: timelineObj.iun
       },
       eventId: {
         DataType: 'String',
@@ -40,13 +38,6 @@ exports.mapEvents = (events) => {
         StringValue:'WEBHOOK_ACTION_GENERIC'
       },
     };
-    
-    /*
-    let webhookEvent = {
-      header: header,
-      payload: action
-    };
-    */
 
     let resultElement = {
       Id: events[i].kinesisSeqNumber,

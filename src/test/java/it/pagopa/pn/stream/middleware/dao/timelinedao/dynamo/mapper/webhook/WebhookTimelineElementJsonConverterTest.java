@@ -23,19 +23,7 @@ class WebhookTimelineElementJsonConverterTest {
         this.converter = new WebhookTimelineElementJsonConverter(this.objectMapper);
     }
 
-    @Test
-    void test_convertEntityToJson() {
-        String iun = "ABC-DEFGHI-LM12-353-FSA";
-        WebhookTimelineElementEntity entity = new WebhookTimelineElementEntity();
-        entity.setIun(iun);
 
-        String expected = """
-        {"iun":"ABC-DEFGHI-LM12-353-FSA"}""";
-
-        String json = converter.entityToJson(entity);
-        assertNotNull(json);
-        assertTrue(json.contains(expected));
-    }
 
     @Test
     void test_convertJsonEntity() {
@@ -177,20 +165,6 @@ class WebhookTimelineElementJsonConverterTest {
 
         assertNotNull(timelineElementEntity);
         assertNotNull(timelineElementEntity.getDetails());
-    }
-
-    @Test
-    void test_convertEntityToJsonException() {
-        // Mock del TimelineElementEntity
-        WebhookTimelineElementEntity entity = Mockito.mock(WebhookTimelineElementEntity.class);
-
-        WebhookTimelineElementJsonConverter converterMock = mock(WebhookTimelineElementJsonConverter.class);
-
-        // Stub della chiamata al metodo entityToJson per lanciare un'eccezione
-        doThrow(new PnInternalException("Errore", ERROR_CODE_PN_GENERIC_ERROR)).when(converterMock).entityToJson(entity);
-
-        // Verifica che chiamando il metodo si lanci un'eccezione
-        assertThrows(PnInternalException.class, () -> converterMock.entityToJson(entity));
     }
 
 }

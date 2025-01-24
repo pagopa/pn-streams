@@ -218,7 +218,7 @@ Parameters:
   StartReadStreamTimestamp:
     Type: String
     Description: 'Start timestamp for read stream'
-    Default: "1999-01-01T00:00:00Z"
+    Default: "2099-01-01T00:00:00Z"
 
   StopReadStreamTimestamp:
     Type: String
@@ -487,7 +487,7 @@ Resources:
           Destination: !Ref StreamEventManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnTimelinesTableName}"]}'
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"], "tableName": ["${PnTimelinesTableName}"]}}'
 
   StreamEventManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack
@@ -560,6 +560,9 @@ Resources:
               - kinesis:ListStreams
               - kinesis:SubscribeToShard
             Resource: !Ref CdcKinesisSourceStreamArn
+          - Effect: Allow
+            Action: dynamodb:PutItem
+            Resource: !Ref StreamNotificationTableArn
           - Action: kms:Decrypt
             Effect: Allow
             Resource: !Ref CdcKinesisSourceStreamKeyArn
@@ -589,7 +592,7 @@ Resources:
           Destination: !Ref NotificationStreamManagerDLQARN
       FilterCriteria:
         Filters:
-          - Pattern: !Sub '{"data": {"eventName": ["INSERT"]}, "tableName": ["${PnNotificationTableName}"]}'
+          - Pattern: !Sub '{"data": {"eventName": ["INSERT"], "tableName": ["${PnNotificationTableName}"]}}'
 
   NotificationStreamManagerLambdaAlarms:
     Type: AWS::CloudFormation::Stack

@@ -26,16 +26,6 @@ public class WebhookTimelineElementJsonConverter {
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
-    public String entityToJson(WebhookTimelineElementEntity entity) {
-        Map<String, Object> objectHashMap = objectMapper.convertValue(entity, HashMap.class);
-        try {
-            return objectMapper.writeValueAsString(objectHashMap);
-        } catch (JsonProcessingException ex) {
-            log.error(LOG_MSG, ex);
-            throw new PnInternalException(LOG_MSG, ERROR_CODE_PN_GENERIC_ERROR);
-        }
-    }
-
     public WebhookTimelineElementEntity jsonToEntity(String json) {
         try {
             objectMapper.registerModule(new JavaTimeModule());

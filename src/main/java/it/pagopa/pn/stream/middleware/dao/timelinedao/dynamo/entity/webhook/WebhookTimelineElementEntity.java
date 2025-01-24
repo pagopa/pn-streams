@@ -2,6 +2,7 @@ package it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.pagopa.pn.stream.dto.timeline.StatusInfoEntity;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactsIdV20;
 import it.pagopa.pn.stream.utils.ObjectToStringDeserializer;
 import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
@@ -25,7 +26,7 @@ public class WebhookTimelineElementEntity {
     private Instant timestamp;
     private String paId;
     private String category;
-    private List<String> legalFactIds;
+    private List<LegalFactsIdV20> legalFactIds;
     @JsonDeserialize(using = ObjectToStringDeserializer.class)
     private String details;
     private StatusInfoEntity statusInfo;
@@ -71,10 +72,10 @@ public class WebhookTimelineElementEntity {
     }
 
     @DynamoDbAttribute(value = "legalFactId")
-    public List<String> getLegalFactIds() {
+    public List<LegalFactsIdV20> getLegalFactIds() {
         return legalFactIds;
     }
-    public void setLegalFactIds(List<String> legalFactIds) {
+    public void setLegalFactIds(List<LegalFactsIdV20> legalFactIds) {
         this.legalFactIds = legalFactIds;
     }
     

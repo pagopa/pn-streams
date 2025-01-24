@@ -1,13 +1,13 @@
 const { expect } = require("chai");
 const proxyquire = require("proxyquire").noPreserveCache();
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
 const {
   mockClient,
 } = require("aws-sdk-client-mock");
 
 describe("Lambda Handler Tests", () => {
   process.env.REGION = "us-east-1";
-  const mockDynamoDBClient = mockClient(DynamoDBClient);
+  const mockDynamoDBClient = mockClient(DynamoDBDocumentClient);
 
   const lambda = proxyquire.noCallThru().load("../app/eventHandler.js", {
     "@aws-sdk/client-dynamodb": {
