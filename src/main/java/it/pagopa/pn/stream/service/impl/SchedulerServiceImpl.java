@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class SchedulerServiceImpl implements SchedulerService {
     private final StreamsPool streamsPool;
-    
+
     @Override
     public void scheduleStreamEvent(String streamId, String eventId, Integer delay, StreamEventType actionType) {
         StreamAction action = StreamAction.builder()

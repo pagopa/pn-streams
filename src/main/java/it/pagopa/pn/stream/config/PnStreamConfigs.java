@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
+import java.util.List;
 
 @Configuration
 @ConfigurationProperties( prefix = "pn.stream")
@@ -18,6 +19,7 @@ public class PnStreamConfigs {
     private Topics topics;
     private String externalRegistryBaseUrl;
     private String dataVaultBaseUrl;
+    private String deliveryBaseUrl;
     private Long scheduleInterval;
     private Integer maxLength;
     private Integer maxStreams;
@@ -30,6 +32,8 @@ public class PnStreamConfigs {
     private String currentVersion;
     private String retryParameterPrefix;
     private Boolean retryAfterEnabled;
+    private Long streamNotificationTtl;
+    private List<String> listCategoriesPa;
 
     @Data
     public static class Dao {
@@ -41,5 +45,6 @@ public class PnStreamConfigs {
     @Data
     public static class Topics {
         private String scheduledActions;
+        private String event;
     }
 }

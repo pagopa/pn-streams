@@ -47,8 +47,8 @@ class TimeLineServiceImplTest {
         mapConfInf.put(confInfDigital.getTimelineElementId(), confInfDigital);
         mapConfInf.put(confInfPhysical.getTimelineElementId(), confInfPhysical);
 
-        String physical = timeLineService.enrichTimelineElementWithConfidentialInformation(null, "{\"recIndex\":0,\"physicalAddress\":{\"zip\":\"87100\",\"foreignState\":\"ITALIA\"},\"nextSourceAttemptsMade\":0}", confInfPhysical);
-        String digital = timeLineService.enrichTimelineElementWithConfidentialInformation(null, "{\"recIndex\":0,\"digitalAddress\":{\"type\":\"SERCQ\"}}", confInfDigital);
+        String physical = timeLineService.enrichTimelineElementWithConfidentialInformation("","{\"recIndex\":0,\"physicalAddress\":{\"zip\":\"87100\",\"foreignState\":\"ITALIA\"},\"nextSourceAttemptsMade\":0}", confInfPhysical);
+        String digital = timeLineService.enrichTimelineElementWithConfidentialInformation("","{\"recIndex\":0,\"digitalAddress\":{\"type\":\"SERCQ\"}}", confInfDigital);
 
         Assertions.assertTrue(digital.contains("\"address\":\"prova@prova.com\""));
         Assertions.assertTrue(physical.contains("\"at\":\"at\""));

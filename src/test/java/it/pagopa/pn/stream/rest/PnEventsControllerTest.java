@@ -1,6 +1,6 @@
 package it.pagopa.pn.stream.rest;
 
-import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
+import it.pagopa.pn.stream.dto.ProgressResponseElementDto;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.CxTypeAuthFleet;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.NotificationStatusV26;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.ProgressResponseElementV26;

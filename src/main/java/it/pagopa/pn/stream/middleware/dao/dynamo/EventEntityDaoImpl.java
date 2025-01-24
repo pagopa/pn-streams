@@ -5,10 +5,7 @@ import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
@@ -74,6 +71,23 @@ public class EventEntityDaoImpl implements EventEntityDao {
         return Mono.fromFuture(table.putItem(entity).thenApply(r -> entity));
     }
 
+    @Override
+    public Mono<EventEntity> saveWithCondition(EventEntity entity) {
+        log.info("save entity={}", entity);
+
+        // Define the condition expression to check if an event with the same eventDescription already exists
+        Expression conditionExpression = Expression.builder()
+                .expression("attribute_not_exists(#eventDescription)")
+                .putExpressionName("#eventDescription", EventEntity.COL_EVENTDESCRIPTION)
+                .build();
+
+        return Mono.fromFuture(table.putItem(r -> r.item(entity).conditionExpression(conditionExpression))
+                        .thenApply(r -> entity))
+                .onErrorResume(ex -> {
+                    log.error("Failed to save entity due to condition check failure", ex);
+                    return Mono.empty();
+                });
+    }
 
     private Mono<EventEntityBatch> findByStreamId(String streamId, String eventId, boolean olderThan, int pagelimit) {
         Key hashKey = Key.builder()

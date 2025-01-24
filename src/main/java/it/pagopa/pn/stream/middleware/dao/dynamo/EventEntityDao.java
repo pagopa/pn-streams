@@ -5,8 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface EventEntityDao {
 
-    String IMPLEMENTATION_TYPE_PROPERTY_NAME = "pn.middleware.impl.webhook-event-dao";
-
     /**
      * Ritorna gli eventi più nuovi dell'eventId passato, per lo stream
      * @param streamId  streamId di cui recuperare gli eventi
@@ -25,4 +23,6 @@ public interface EventEntityDao {
     Mono<Boolean> delete(String streamId, String eventId, boolean olderThan);
 
     Mono<EventEntity> save(EventEntity entity);
+
+    Mono<EventEntity> saveWithCondition(EventEntity entity);
 }
