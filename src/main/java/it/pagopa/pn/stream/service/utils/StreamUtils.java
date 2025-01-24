@@ -2,26 +2,24 @@ package it.pagopa.pn.stream.service.utils;
 
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
+import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
-import it.pagopa.pn.stream.exceptions.PnStreamExceptionCodes;
-import it.pagopa.pn.stream.middleware.dao.notificationdao.NotificationDao;
-import it.pagopa.pn.stream.middleware.dao.notificationdao.dynamo.entity.NotificationEntity;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.middleware.dao.mapper.DtoToEntityWebhookTimelineMapper;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook.WebhookTimelineElementEntity;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.EntityToDtoWebhookTimelineMapper;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook.WebhookTimelineElementJsonConverter;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.EventEntity;
-import it.pagopa.pn.stream.middleware.dao.webhook.dynamo.entity.StreamEntity;
-import it.pagopa.pn.stream.service.NotificationService;
-import it.pagopa.pn.stream.service.StatusService;
-import lombok.Builder;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,38 +29,18 @@ import java.util.List;
 public class StreamUtils {
     private final EntityToDtoWebhookTimelineMapper entityToDtoTimelineMapper;
     private final WebhookTimelineElementJsonConverter timelineElementJsonConverter;
-    private final NotificationService notificationService;
     private final Duration ttl;
     private final PnStreamConfigs pnStreamConfigs;
-    private final NotificationDao notificationDao;
 
-   public StreamUtils(NotificationService notificationService,
-                       PnStreamConfigs pnStreamConfigs, DtoToEntityWebhookTimelineMapper mapperTimeline, EntityToDtoWebhookTimelineMapper entityToDtoTimelineMapper,
-                       WebhookTimelineElementJsonConverter timelineElementJsonConverter, NotificationDao notificationDao) {
-        this.notificationService = notificationService;
+    private final DtoToEntityWebhookTimelineMapper mapperTimeline;
+   public StreamUtils(DtoToEntityWebhookTimelineMapper mapperTimeline, EntityToDtoWebhookTimelineMapper entityToDtoTimelineMapper,
+                      WebhookTimelineElementJsonConverter timelineElementJsonConverter, PnStreamConfigs pnStreamConfigs) {
         this.entityToDtoTimelineMapper = entityToDtoTimelineMapper;
         this.pnStreamConfigs = pnStreamConfigs;
         this.timelineElementJsonConverter = timelineElementJsonConverter;
-        this.notificationDao = notificationDao;
+        this.ttl = pnStreamConfigs.getTtl();
+        this.mapperTimeline = mapperTimeline;
     }
-
-    public List<String> getNotification(String iun) {
-        return notificationDao.getNotificationEntity(iun)
-                .switchIfEmpty(Mono.defer(() -> {
-                    try {
-                        NotificationInt notificationInt = notificationService.getNotificationByIun(iun);
-                        NotificationEntity fallbackEntity = new NotificationEntity();
-                        fallbackEntity.setGroups(Collections.singletonList(notificationInt.getGroup()));
-                        return Mono.just(fallbackEntity);
-                    } catch (Exception ex) {
-                        log.error("Error while retrieving notification from notificationService", ex);
-                        return Mono.error(new PnInternalException("Notification not found in notificationService", PnStreamExceptionCodes.ERROR_CODE_WEBHOOK_SAVEEVENT));
-                    }
-                }))
-                .map(NotificationEntity::getGroups)
-                .block();
-    }
-
     public EventEntity buildEventEntity(Long atomicCounterUpdated, StreamEntity streamEntity,
                                         String newStatus, TimelineElementInternal timelineElementInternal) throws PnInternalException{
 

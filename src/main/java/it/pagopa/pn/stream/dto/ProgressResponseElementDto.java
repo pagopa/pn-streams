@@ -1,4 +1,4 @@
-package it.pagopa.pn.stream.dto.stream;
+package it.pagopa.pn.stream.dto;
 
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.ProgressResponseElementV26;
 import lombok.Builder;

@@ -50,7 +50,7 @@ public class StreamActionsEventHandler {
 
         MDCUtils.addMDCToContextAndExecute(
             webhookService
-                    .saveEvent(evt.getTimelineElementInternal(), evt.getType())
+                    .saveEvent(evt.getTimelineElementInternal())
         ).block();
         
         log.debug("[exit] doHandleRegisterEvent evt={}", evt);

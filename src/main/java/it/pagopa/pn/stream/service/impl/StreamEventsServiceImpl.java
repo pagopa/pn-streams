@@ -5,20 +5,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
+import it.pagopa.pn.deliverypush.generated.openapi.msclient.delivery.model.SentNotificationV24;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
+import it.pagopa.pn.stream.config.springbootcfg.AbstractCachedSsmParameterConsumerActivation;
+import it.pagopa.pn.stream.dto.TimelineElementCategoryInt;
 import it.pagopa.pn.stream.dto.ext.delivery.notification.status.NotificationStatusInt;
+import it.pagopa.pn.stream.dto.CustomRetryAfterParameter;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
-import it.pagopa.pn.stream.dto.timeline.details.TimelineElementCategoryInt;
-import it.pagopa.pn.stream.dto.stream.EventTimelineInternalDto;
-import it.pagopa.pn.stream.dto.stream.ProgressResponseElementDto;
-import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
+import it.pagopa.pn.stream.dto.EventTimelineInternalDto;
+import it.pagopa.pn.stream.dto.ProgressResponseElementDto;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.ProgressResponseElementV26;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamCreationRequestV26;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.TimelineElementV26;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.StreamEntityDao;
+import it.pagopa.pn.stream.middleware.dao.dynamo.StreamNotificationDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamNotificationEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.externalclient.pnclient.delivery.PnDeliveryClientReactive;
 import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamEventType;
 import it.pagopa.pn.stream.service.ConfidentialInformationService;
 import it.pagopa.pn.stream.service.SchedulerService;
@@ -29,21 +36,28 @@ import it.pagopa.pn.stream.service.mapper.TimelineElementStreamMapper;
 import it.pagopa.pn.stream.service.utils.StreamUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.commons.exceptions.PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR;
+import static it.pagopa.pn.stream.service.utils.StreamUtils.checkGroups;
 
 
 @Service
 @Slf4j
 public class StreamEventsServiceImpl extends PnStreamServiceImpl implements StreamEventsService {
+
+    private static final String DEFAULT_CATEGORIES = "DEFAULT";
     private final EventEntityDao eventEntityDao;
+    private final StreamNotificationDao streamNotificationDao;
+    private final PnDeliveryClientReactive pnDeliveryClientReactive;
     private final SchedulerService schedulerService;
     private final StreamUtils streamUtils;
     private final TimelineService timelineService;
@@ -57,7 +71,8 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                                    SchedulerService schedulerService, StreamUtils streamUtils,
                                    PnStreamConfigs pnStreamConfigs, TimelineService timeLineService,
                                    ConfidentialInformationService confidentialInformationService,
-                                   AbstractCachedSsmParameterConsumerActivation ssmParameterConsumerActivation) {
+                                   AbstractCachedSsmParameterConsumerActivation ssmParameterConsumerActivation,
+                                   StreamNotificationDao streamNotificationDao, PnDeliveryClientReactive pnDeliveryClientReactive) {
         super(streamEntityDao, pnStreamConfigs);
         this.eventEntityDao = eventEntityDao;
         this.schedulerService = schedulerService;
@@ -65,6 +80,8 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         this.timelineService = timeLineService;
         this.confidentialInformationService = confidentialInformationService;
         this.ssmParameterConsumerActivation = ssmParameterConsumerActivation;
+        this.streamNotificationDao = streamNotificationDao;
+        this.pnDeliveryClientReactive = pnDeliveryClientReactive;
     }
 
     @Override
@@ -193,89 +210,97 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     }
 
     @Override
-    public Mono<Void> saveEvent(TimelineElementInternal timelineElementInternal, StreamEventType streamEventType) {
+    public Mono<Void> saveEvent(TimelineElementInternal timelineElementInternal) {
         return streamEntityDao.findByPa(timelineElementInternal.getPaId())
                 .filter(entity -> entity.getDisabledDate() == null)
                 .collectList()
-            .flatMap(l -> {
-                if (l.isEmpty()) {
-                    return Mono.empty();    // se non ho stream in ascolto, non c'è motivo di fare le query in dynamo
+            .flatMap(stream -> {
+                if (stream.isEmpty()) {
+                    return Mono.empty();
                 }
                 else {
-                    return Mono.fromSupplier(() -> Tuples.of(l, timelineElementInternal, streamUtils.getNotification(timelineElementInternal.getIun())));
+                    return getNotification(timelineElementInternal.getIun())
+                            .map(notification -> Tuples.of(stream, timelineElementInternal, notification));
                 }
             })
             .flatMapMany(res -> Flux.fromIterable(res.getT1())
-                .flatMap(stream -> processEvent(stream, res.getT2(), res.getT3()))).collectList().then();
+                .flatMap(stream -> processEvent(stream, res.getT2(), res.getT3().getGroup()))).collectList().then();
     }
-    private Mono<Void> processEvent(StreamEntity stream, TimelineElementInternal timelineElementInternal, List<String> groups) {
 
-        if (!CollectionUtils.isEmpty(stream.getGroups()) && !checkGroups(groups, stream.getGroups())){
+    public Mono<StreamNotificationEntity> getNotification(String iun) {
+        return streamNotificationDao.findByIun(iun)
+                .switchIfEmpty(Mono.defer(() -> pnDeliveryClientReactive.getSentNotification(iun))
+                        .flatMap(this::constructAndSaveNotificationEntity));
+    }
+
+    private Mono<StreamNotificationEntity> constructAndSaveNotificationEntity(SentNotificationV24 sentNotificationV24) {
+        StreamNotificationEntity streamNotificationEntity = new StreamNotificationEntity();
+        streamNotificationEntity.setHashKey(sentNotificationV24.getIun());
+        streamNotificationEntity.setGroup(sentNotificationV24.getGroup());
+        streamNotificationEntity.setTtl(Instant.now().plusSeconds(pnStreamConfigs.getStreamNotificationTtl()).toEpochMilli());
+        streamNotificationEntity.setCreationDate(sentNotificationV24.getSentAt());
+        return streamNotificationDao.putItem(streamNotificationEntity)
+                .thenReturn(streamNotificationEntity);
+    }
+
+    private Mono<Void> processEvent(StreamEntity stream, TimelineElementInternal timelineElementInternal, String groups) {
+
+        if (!CollectionUtils.isEmpty(stream.getGroups()) && !checkGroups(Collections.singletonList(groups), stream.getGroups())){
             log.info("skipping saving webhook event for stream={} because stream groups are different", stream.getStreamId());
             return Mono.empty();
         }
-        // per ogni stream configurato, devo andare a controllare se lo stato devo salvarlo o meno
-        // c'è il caso in cui lo stato non cambia (e se lo stream vuolo solo i cambi di stato, lo ignoro)
-        if (!StringUtils.hasText(stream.getEventType()))
-        {
+        if (!StringUtils.hasText(stream.getEventType())) {
             log.warn("skipping saving because webhook stream configuration is not correct stream={}", stream);
             return Mono.empty();
         }
 
-        StreamCreationRequestV25.EventTypeEnum eventType = StreamCreationRequestV25.EventTypeEnum.fromValue(stream.getEventType());
-        if (eventType == StreamCreationRequestV25.EventTypeEnum.STATUS
-            && !timelineElementInternal.getStatusInfo().isStatusChanged())
-        {
+        StreamCreationRequestV26.EventTypeEnum eventType = StreamCreationRequestV26.EventTypeEnum.fromValue(stream.getEventType());
+        if (eventType == StreamCreationRequestV26.EventTypeEnum.STATUS && !timelineElementInternal.getStatusInfo().isStatusChanged()) {
             log.info("skipping saving webhook event for stream={} because there was no change in status iun={}", stream.getStreamId(), timelineElementInternal.getIun());
             return Mono.empty();
         }
 
-        String timelineEventCategory = timelineElementInternal.getCategory().getValue();
-
-        if (isDiagnosticElement(timelineEventCategory)){
+        String timelineEventCategory = timelineElementInternal.getCategory();
+        if (isDiagnosticElement(timelineElementInternal.getCategory())){
             log.info("skipping saving webhook event for stream={} because category={} is only diagnostic", stream.getStreamId(), timelineEventCategory);
             return Mono.empty();
         }
 
-        Set<String> filteredValues = new LinkedHashSet<>();
-        if (eventType == StreamCreationRequestV25.EventTypeEnum.TIMELINE) {
-            filteredValues = categoriesByFilter(stream);
-        } else if (eventType == StreamCreationRequestV25.EventTypeEnum.STATUS){
-            filteredValues = stream.getFilterValues() == null || stream.getFilterValues().isEmpty()
-                ? defaultNotificationStatuses
-                : stream.getFilterValues();
-        }
+        Set<String> filteredValues = retrieveFilteredValues(stream, eventType);
 
         log.info("timelineEventCategory={} for stream={}", stream.getStreamId(), timelineEventCategory);
-
-        // e poi c'è il caso in cui lo stream ha un filtro sugli eventi interessati
-        // se è nullo/vuoto o contiene lo stato, vuol dire che devo salvarlo
-        if ( (eventType == StreamCreationRequestV25.EventTypeEnum.STATUS && filteredValues.contains(timelineElementInternal.getStatusInfo().getActual()))
-            || (eventType == StreamCreationRequestV25.EventTypeEnum.TIMELINE && filteredValues.contains(timelineEventCategory)))
-        {
+        if ( (eventType == StreamCreationRequestV26.EventTypeEnum.STATUS && filteredValues.contains(timelineElementInternal.getStatusInfo().getActual()))
+            || (eventType == StreamCreationRequestV26.EventTypeEnum.TIMELINE && filteredValues.contains(timelineEventCategory))) {
             return saveEventWithAtomicIncrement(stream, timelineElementInternal.getStatusInfo().getActual(), timelineElementInternal);
         }
         else {
             log.info("skipping saving webhook event for stream={} because timelineeventcategory is not in list timelineeventcategory={} iun={}", stream.getStreamId(), timelineEventCategory, timelineElementInternal.getIun());
         }
-
         return Mono.empty();
+    }
+
+    private Set<String> retrieveFilteredValues(StreamEntity stream, StreamCreationRequestV26.EventTypeEnum eventType) {
+        if (eventType == StreamCreationRequestV26.EventTypeEnum.TIMELINE) {
+            return categoriesByFilter(stream);
+        } else if (eventType == StreamCreationRequestV26.EventTypeEnum.STATUS){
+            return Objects.isNull(stream.getFilterValues()) || stream.getFilterValues().isEmpty()
+                    ? statusByVersion(streamUtils.getVersion(stream.getVersion()))
+                    : stream.getFilterValues();
+        }
+        return Collections.emptySet();
     }
 
     private boolean isDiagnosticElement(String timelineEventCategory) {
         try {
             TimelineElementCategoryInt.DiagnosticTimelineElementCategory.valueOf(timelineEventCategory);
-            //Is diagnostic element
             return true;
         }catch (IllegalArgumentException ex){
-            //is not diagnostic element
             return false;
         }
     }
 
     private Mono<Void> saveEventWithAtomicIncrement(StreamEntity streamEntity, String newStatus,
                                                     TimelineElementInternal timelineElementInternal) {
-        // recupero un contatore aggiornato
         return streamEntityDao.updateAndGetAtomicCounter(streamEntity)
                 .flatMap(atomicCounterUpdated -> {
                     if (atomicCounterUpdated < 0) {
@@ -299,9 +324,9 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
             .map(thereAreMore -> {
                 if (Boolean.TRUE.equals(thereAreMore))
                 {
-                    var purgeDeletionWaittime = pnStreamConfigs.getWebhook().getPurgeDeletionWaittime();
+                    var purgeDeletionWaittime = pnStreamConfigs.getPurgeDeletionWaittime();
                     log.info("purgeEvents streamId={} eventId={} olderThan={} there are more event to purge", streamId, eventId, olderThan);
-                    schedulerService.scheduleWebhookEvent(streamId, eventId, purgeDeletionWaittime, olderThan? StreamEventType.PURGE_STREAM_OLDER_THAN: StreamEventType.PURGE_STREAM);
+                    schedulerService.scheduleStreamEvent(streamId, eventId, purgeDeletionWaittime, olderThan? StreamEventType.PURGE_STREAM_OLDER_THAN: StreamEventType.PURGE_STREAM);
                 }
                 else
                     log.info("purgeEvents streamId={} eventId={} olderThan={} no more event to purge", streamId, eventId, olderThan);
@@ -313,14 +338,14 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
 
     private Set<String> categoriesByVersion(int version) {
         return Arrays.stream(TimelineElementCategoryInt.values())
-            .filter( e -> e.getVersion() <= version)
-            .map(TimelineElementCategoryInt::getValue)
+            .filter( e -> e.getVersion() <= TimelineElementCategoryInt.StreamVersions.fromIntValue(version).getTimelineVersion())
+            .map(Enum::name)
             .collect(Collectors.toSet());
     }
 
     private Set<String> statusByVersion(int version) {
         return Arrays.stream(NotificationStatusInt.values())
-            .filter( e -> e.getVersion() <= version)
+            .filter( e -> e.getVersion() <= TimelineElementCategoryInt.StreamVersions.fromIntValue(version).getStatusVersion())
             .map(NotificationStatusInt::getValue)
             .collect(Collectors.toSet());
     }

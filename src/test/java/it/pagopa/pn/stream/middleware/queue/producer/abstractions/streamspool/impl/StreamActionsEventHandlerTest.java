@@ -27,14 +27,14 @@ class StreamActionsEventHandlerTest {
     void handleEventRegister() {
         // GIVEN
         StreamAction action = buildWebhookAction();
-        Mockito.when(webhookService.saveEvent(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(webhookService.saveEvent(Mockito.any())).thenReturn(Mono.empty());
 
         // WHEN
         handler.handleEvent(action);
 
         // THEN
         Mockito.verify(webhookService, Mockito.times(1))
-                .saveEvent(action.getTimelineElementInternal(), action.getType());
+                .saveEvent(action.getTimelineElementInternal());
     }
 
 
