@@ -12,6 +12,8 @@ import it.pagopa.pn.stream.dto.timeline.StatusInfoInternal;
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
 import it.pagopa.pn.stream.exceptions.PnTooManyRequestException;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactCategoryV20;
+import it.pagopa.pn.stream.generated.openapi.server.v1.dto.LegalFactsIdV20;
 import it.pagopa.pn.stream.generated.openapi.server.v1.dto.StreamMetadataResponseV26;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityBatch;
 import it.pagopa.pn.stream.middleware.dao.dynamo.EventEntityDao;
@@ -639,7 +641,7 @@ class EventsServiceImplTest {
                 .timestamp(Instant.now())
                 .paId("paId")
                 .statusInfo(StatusInfoInternal.builder().actual("actual").statusChanged(true).build())
-                .legalFactsIds(List.of("{\"key\":\"key\", \"category\":\"DIGITAL_DELIVERY\"}"))
+                .legalFactsIds(List.of(LegalFactsIdV20.builder().key("key").category(LegalFactCategoryV20.DIGITAL_DELIVERY).build()))
                 .build();
 
         EventTimelineInternalDto eventTimelineInternalDto = EventTimelineInternalDto.builder()
@@ -700,7 +702,7 @@ class EventsServiceImplTest {
                 .timestamp(Instant.now())
                 .paId("paId")
                 .statusInfo(StatusInfoInternal.builder().actual("actual").statusChanged(true).build())
-                .legalFactsIds(List.of("{\"key\":\"key\", \"category\":\"DIGITAL_DELIVERY\"}"))
+                .legalFactsIds(List.of(LegalFactsIdV20.builder().key("key").category(LegalFactCategoryV20.DIGITAL_DELIVERY).build()))
                 .build();
 
         EventTimelineInternalDto eventTimelineInternalDto = EventTimelineInternalDto.builder()
