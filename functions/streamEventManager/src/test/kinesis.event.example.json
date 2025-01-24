@@ -26,6 +26,9 @@
             "paId": {
                 "S": "026e8c72-7944-4dcd-8668-f596447fec6d"
             },
+            "statusInfo" : {
+                "S": "IN_PROGRESS"
+            },
             "details": {
                 "M": {
                     "notificationCost": {

@@ -18,9 +18,9 @@ describe("event mapper tests", function () {
     console.log(res[0]);
 
     let body = JSON.parse(res[0].MessageBody);
-    expect(body.iun).equal("abcd");
-    expect(body.paId).equal("026e8c72-7944-4dcd-8668-f596447fec6d");
-    expect(body.timelineId).equal("notification_viewed_creation_request;IUN_XLDW-MQYJ-WUKA-202302-A-1;RECINDEX_1");
+    expect(body.event.iun).equal("abcd");
+    expect(body.event.paId).equal("026e8c72-7944-4dcd-8668-f596447fec6d");
+    expect(body.event.timelineElementId).equal("notification_viewed_creation_request;IUN_XLDW-MQYJ-WUKA-202302-A-1;RECINDEX_1");
     expect(body.type).equal("REGISTER_EVENT");
 
     expect(res[0].MessageAttributes.publisher.StringValue).equal("deliveryPush");

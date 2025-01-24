@@ -19,11 +19,6 @@ function decodePayload(b64Str) {
   return parsedJson;
 }
 
-function mustProcess(rec) {
-  const allowedTables = ["pn-Timelines"];
-  return allowedTables.indexOf(rec.tableName) > -1 && rec.eventName == "INSERT";
-}
-
 exports.extractKinesisData = function (kinesisEvent) {
   return kinesisEvent.Records.map((rec) => {
     const decodedPayload = decodePayload(rec.kinesis.data);
@@ -31,7 +26,5 @@ exports.extractKinesisData = function (kinesisEvent) {
       kinesisSeqNumber: rec.kinesis.sequenceNumber,
       ...decodedPayload,
     };
-  }).filter((rec) => {
-    return mustProcess(rec);
   });
 };
