@@ -18,7 +18,7 @@ public class PnStreamMiddlewareConfigs {
     }
 
     @Bean
-    public SqsStreamProducer webhookActionsEventProducer(SqsClient sqs, ObjectMapper objMapper) {
+    public SqsStreamProducer streamActionsEventProducer(SqsClient sqs, ObjectMapper objMapper) {
         return new SqsStreamProducer( sqs, cfg.getTopics().getScheduledActions(), objMapper);
     }
 }

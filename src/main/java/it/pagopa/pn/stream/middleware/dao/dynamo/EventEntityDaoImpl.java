@@ -5,13 +5,11 @@ import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.sortGreaterThan;
 import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.sortLessThanOrEqualTo;
@@ -74,6 +72,23 @@ public class EventEntityDaoImpl implements EventEntityDao {
         return Mono.fromFuture(table.putItem(entity).thenApply(r -> entity));
     }
 
+    @Override
+    public Mono<EventEntity> saveWithCondition(EventEntity entity) {
+        log.info("save entity={}", entity);
+
+        Expression conditionExpression = Expression.builder()
+                .expression("attribute_not_exists(#eventDescription) AND attribute_not_exists(#streamID)")
+                .putExpressionName("#eventDescription", EventEntity.COL_EVENTDESCRIPTION)
+                .putExpressionName("#streamID", EventEntity.COL_PK)
+                .build();
+
+        return Mono.fromFuture(table.putItem(r -> r.item(entity).conditionExpression(conditionExpression))
+                        .thenApply(r -> entity))
+                .onErrorResume(ConditionalCheckFailedException.class, ex -> {
+                    log.error("Failed to save entity due to condition check failure", ex);
+                    return Mono.empty();
+                });
+    }
 
     private Mono<EventEntityBatch> findByStreamId(String streamId, String eventId, boolean olderThan, int pagelimit) {
         Key hashKey = Key.builder()

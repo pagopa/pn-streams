@@ -1,4 +1,4 @@
-package it.pagopa.pn.stream.dto.stream;
+package it.pagopa.pn.stream.dto;
 
 import it.pagopa.pn.stream.dto.timeline.TimelineElementInternal;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;

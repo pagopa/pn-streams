@@ -1,7 +1,7 @@
 package it.pagopa.pn.stream.middleware.dao.dynamo;
 
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
-import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamRetryAfter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -14,7 +14,7 @@ public interface StreamEntityDao {
 
     Mono<StreamEntity> get(String paId, String streamId);
 
-    Mono<Tuple2<StreamEntity, Optional<WebhookStreamRetryAfter>>> getWithRetryAfter(String paId, String streamId);
+    Mono<Tuple2<StreamEntity, Optional<StreamRetryAfter>>> getWithRetryAfter(String paId, String streamId);
 
     Mono<Void> delete(String paId, String streamId);
 
@@ -34,5 +34,5 @@ public interface StreamEntityDao {
 
     Mono<StreamEntity> disable(StreamEntity entity);
 
-    Mono<Void> updateStreamRetryAfter(WebhookStreamRetryAfter entity);
+    Mono<Void> updateStreamRetryAfter(StreamRetryAfter entity);
 }

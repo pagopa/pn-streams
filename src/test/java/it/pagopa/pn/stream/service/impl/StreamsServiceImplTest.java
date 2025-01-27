@@ -1582,7 +1582,6 @@ class StreamsServiceImplTest {
         when(streamEntityDao.getWithRetryAfter(any(), any())).thenReturn(Mono.just(Tuples.of(entity, Optional.empty())));
         Mockito.when(streamEntityDao.update(Mockito.any())).thenReturn(Mono.just(entity));
 
-
         //WHEN
         StreamMetadataResponseV26 res = webhookService.updateEventStream(xpagopapnuid,xpagopacxid, List.of("gruppo1"),"v10", uuidd, Mono.just(req)).block(d);
 

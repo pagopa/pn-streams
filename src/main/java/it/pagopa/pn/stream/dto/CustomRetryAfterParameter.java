@@ -1,4 +1,4 @@
-package it.pagopa.pn.stream.dto.stream;
+package it.pagopa.pn.stream.dto;
 
 import lombok.Data;
 

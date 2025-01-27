@@ -18,6 +18,41 @@ class EventEntityDaoIT extends BaseTest.WithLocalStack{
     @Mock
     StreamEntityDao streamEntityDao;
 
+    @Test
+    void saveEventWithCOnditionKO(){
+        EventEntity event = new EventEntity(1L, "streamId-1");
+        event.setEventDescription("prova");
+        eventEntityDao.save(event).block();
+        EventEntity response = eventEntityDao.saveWithCondition(event).block();
+        Assertions.assertNull(response);
+    }
+
+    @Test
+    void saveEventWithConditionOK(){
+        EventEntity event = new EventEntity(1L, "streamId-2");
+        event.setEventDescription("prova");
+        eventEntityDao.save(event).block();
+        EventEntity event2 = new EventEntity(2L, "streamId-2");
+        event2.setEventDescription("prova2");
+
+        EventEntity resp = eventEntityDao.save(event2).block();
+        Assertions.assertEquals("00000000000000000000000000000000000002", resp.getEventId());
+        Assertions.assertEquals("streamId-2", resp.getStreamId());
+    }
+
+    @Test
+    void saveEventWithConditionOK2(){
+        EventEntity event = new EventEntity(1L, "streamId-3");
+        event.setEventDescription("prova");
+        eventEntityDao.save(event).block();
+        EventEntity event2 = new EventEntity(2L, "streamId-4");
+        event2.setEventDescription("prova");
+
+        EventEntity resp = eventEntityDao.save(event2).block();
+        Assertions.assertEquals("00000000000000000000000000000000000002", resp.getEventId());
+        Assertions.assertEquals("streamId-4", resp.getStreamId());
+    }
+
 
     @Test
     void saveEvent(){

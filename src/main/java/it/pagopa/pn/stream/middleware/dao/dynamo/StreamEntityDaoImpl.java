@@ -3,7 +3,7 @@ package it.pagopa.pn.stream.middleware.dao.dynamo;
 import it.pagopa.pn.stream.config.PnStreamConfigs;
 import it.pagopa.pn.stream.exceptions.PnNotFoundException;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
-import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamRetryAfter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -36,14 +36,14 @@ import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.ke
 public class StreamEntityDaoImpl implements StreamEntityDao {
 
     private final DynamoDbAsyncTable<StreamEntity> table;
-    private final DynamoDbAsyncTable<WebhookStreamRetryAfter> tableRetry;
+    private final DynamoDbAsyncTable<StreamRetryAfter> tableRetry;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
     private final DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient;
     private final PnStreamConfigs pnStreamConfigs;
 
     public StreamEntityDaoImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, DynamoDbAsyncClient dynamoDbAsyncClient, PnStreamConfigs cfg) {
         this.table = dynamoDbEnhancedClient.table(cfg.getDao().getStreamsTableName(), TableSchema.fromBean(StreamEntity.class));
-        this.tableRetry = dynamoDbEnhancedClient.table(cfg.getDao().getStreamsTableName(), TableSchema.fromBean(WebhookStreamRetryAfter.class));
+        this.tableRetry = dynamoDbEnhancedClient.table(cfg.getDao().getStreamsTableName(), TableSchema.fromBean(StreamRetryAfter.class));
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
         this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
         this.pnStreamConfigs = cfg;
@@ -65,16 +65,16 @@ public class StreamEntityDaoImpl implements StreamEntityDao {
     }
 
     @Override
-    public Mono<Tuple2<StreamEntity, Optional<WebhookStreamRetryAfter>>> getWithRetryAfter(String paId, String streamId) {
+    public Mono<Tuple2<StreamEntity, Optional<StreamRetryAfter>>> getWithRetryAfter(String paId, String streamId) {
         log.info("getWithRetryAfter paId={} streamId={}", paId, streamId);
         Key hashKey = Key.builder().partitionValue(paId).sortValue(streamId).build();
-        Key retryHashKey = Key.builder().partitionValue(paId).sortValue(WebhookStreamRetryAfter.RETRY_PREFIX + streamId).build();
+        Key retryHashKey = Key.builder().partitionValue(paId).sortValue(StreamRetryAfter.RETRY_PREFIX + streamId).build();
 
         ReadBatch streamEntityBatch = ReadBatch.builder(StreamEntity.class)
                 .mappedTableResource(table)
                 .addGetItem(hashKey)
                 .build();
-        ReadBatch streamRetryEntityBatch = ReadBatch.builder(WebhookStreamRetryAfter.class)
+        ReadBatch streamRetryEntityBatch = ReadBatch.builder(StreamRetryAfter.class)
                 .mappedTableResource(tableRetry)
                 .addGetItem(retryHashKey)
                 .build();
@@ -85,13 +85,13 @@ public class StreamEntityDaoImpl implements StreamEntityDao {
                 .map(batchGetResultPage ->
                         Tuples.of(
                                 batchGetResultPage.resultsForTable(table).stream()
-                                        .filter(entity -> !entity.getStreamId().startsWith(WebhookStreamRetryAfter.RETRY_PREFIX))
+                                        .filter(entity -> !entity.getStreamId().startsWith(StreamRetryAfter.RETRY_PREFIX))
                                         .findFirst()
                                         .orElseThrow(() -> new PnNotFoundException("Not found"
                                                 , String.format("Stream %s non found for Pa %s", streamId, paId)
                                                 , ERROR_CODE_STREAM_STREAMNOTFOUND)),
                                 batchGetResultPage.resultsForTable(tableRetry).stream()
-                                        .filter(entity -> entity.getStreamId().startsWith(WebhookStreamRetryAfter.RETRY_PREFIX) && Objects.nonNull(entity.getRetryAfter()))
+                                        .filter(entity -> entity.getStreamId().startsWith(StreamRetryAfter.RETRY_PREFIX) && Objects.nonNull(entity.getRetryAfter()))
                                         .findFirst())));
     }
 
@@ -180,7 +180,7 @@ public class StreamEntityDaoImpl implements StreamEntityDao {
     }
 
     @Override
-    public Mono<Void> updateStreamRetryAfter(WebhookStreamRetryAfter entity) {
+    public Mono<Void> updateStreamRetryAfter(StreamRetryAfter entity) {
         log.info("updateStreamRetryAfter entity={}", entity);
         return Mono.fromFuture(tableRetry.putItem(entity));
     }

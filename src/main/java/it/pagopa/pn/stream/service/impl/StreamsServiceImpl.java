@@ -26,7 +26,6 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -38,17 +37,13 @@ public class StreamsServiceImpl extends PnStreamServiceImpl implements StreamsSe
     private final SchedulerService schedulerService;
     private final PnExternalRegistryClient pnExternalRegistryClient;
 
-    private int purgeDeletionWaittime;
+    private final int purgeDeletionWaittime;
 
     public StreamsServiceImpl(StreamEntityDao streamEntityDao, SchedulerService schedulerService
             , PnStreamConfigs pnStreamConfigs, PnExternalRegistryClient pnExternalRegistryClient) {
         super(streamEntityDao, pnStreamConfigs);
         this.schedulerService = schedulerService;
         this.pnExternalRegistryClient = pnExternalRegistryClient;
-    }
-
-    @PostConstruct
-    private void postConstruct() {
         this.purgeDeletionWaittime = pnStreamConfigs.getPurgeDeletionWaittime();
     }
 
