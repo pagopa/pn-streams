@@ -19,9 +19,9 @@ public class DtoToEntityWebhookTimelineMapper {
                 .legalFactIds(dto.getLegalFactsIds())
                 .statusInfo(dtoToStatusInfoEntity(dto.getStatusInfo()))
                 .notificationSentAt(dto.getNotificationSentAt())
-                .timestamp(dto.getTimestamp())
-                .ingestionTimestamp(dto.getIngestionTimestamp())
-                .eventTimestamp(dto.getEventTimestamp())
+                .timestamp(dto.getBusinessTimestamp())
+                .ingestionTimestamp(dto.getTimestamp())
+                .eventTimestamp(dto.getBusinessTimestamp())
                 .build();
     }
 
