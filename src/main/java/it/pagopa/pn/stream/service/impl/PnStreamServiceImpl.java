@@ -8,7 +8,7 @@ import it.pagopa.pn.stream.exceptions.PnStreamForbiddenException;
 import it.pagopa.pn.stream.exceptions.PnTooManyRequestException;
 import it.pagopa.pn.stream.middleware.dao.dynamo.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
-import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamRetryAfter;
 import it.pagopa.pn.stream.service.utils.StreamUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +70,7 @@ public abstract class PnStreamServiceImpl {
                 .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Pa " + xPagopaPnCxId + " version " + apiVersion(xPagopaPnApiVersion) + " is trying to access streamId " + streamId + ": api version mismatch")));
     }
 
-    private void checkRetryAfter(String xPagopaPnCxId, String xPagopaPnApiVersion, UUID streamId, WebhookStreamRetryAfter entityRetry) {
+    private void checkRetryAfter(String xPagopaPnCxId, String xPagopaPnApiVersion, UUID streamId, StreamRetryAfter entityRetry) {
         if (Instant.now().isBefore(entityRetry.getRetryAfter())) {
             log.warn("Pa {} version {} is trying to access streamId {}: retry after not expired",
                     xPagopaPnCxId, apiVersion(xPagopaPnApiVersion), streamId);

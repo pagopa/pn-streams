@@ -8,28 +8,21 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
-import java.time.Instant;
-
 @DynamoDbBean
-@Data
 @NoArgsConstructor
-public class WebhookStreamRetryAfter {
+@Data
+public class StreamEventCounter {
 
-    private static final String COL_PK = "hashKey";
-    private static final String COL_SK = "sortKey";
-    private static final String COL_RETRY_AFTER = "retryAfter";
-    public static final String RETRY_PREFIX = "RETRY#";
+    public static final String COL_PK = "hashKey";
+    public static final String COL_SK = "sortKey";
+    public static final String COL_EVENT_CURRENT_COUNTER = "eventAtomicCounter";
+
+    public StreamEventCounter(String paId, String streamId){
+        this.setPaId(paId);
+        this.setStreamId("COUNTER#"+streamId);
+    }
 
     @Getter(onMethod=@__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_PK)})) private String paId;
     @Getter(onMethod=@__({@DynamoDbSortKey, @DynamoDbAttribute(COL_SK)}))  private String streamId;
-    @Getter(onMethod=@__({@DynamoDbAttribute(COL_RETRY_AFTER)})) private Instant retryAfter;
-
-    public void setStreamId(String streamId) {
-        if(!streamId.startsWith(RETRY_PREFIX)) {
-            this.streamId = RETRY_PREFIX + streamId;
-        }else {
-            this.streamId = streamId;
-        }
-    }
-
+    @Getter(onMethod=@__({@DynamoDbAttribute(COL_EVENT_CURRENT_COUNTER) })) private Long eventAtomicCounter;
 }

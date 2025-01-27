@@ -24,7 +24,7 @@ import it.pagopa.pn.stream.middleware.dao.dynamo.StreamNotificationDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamNotificationEntity;
-import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamRetryAfter;
 import it.pagopa.pn.stream.middleware.externalclient.pnclient.delivery.PnDeliveryClientReactive;
 import it.pagopa.pn.stream.middleware.queue.producer.abstractions.streamspool.StreamEventType;
 import it.pagopa.pn.stream.service.ConfidentialInformationService;
@@ -168,8 +168,8 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         }
     }
 
-    private WebhookStreamRetryAfter constructNewRetryAfterEntity(String xPagopaPnCxId, UUID streamId) {
-        WebhookStreamRetryAfter retryAfterEntity = new WebhookStreamRetryAfter();
+    private StreamRetryAfter constructNewRetryAfterEntity(String xPagopaPnCxId, UUID streamId) {
+        StreamRetryAfter retryAfterEntity = new StreamRetryAfter();
         retryAfterEntity.setPaId(xPagopaPnCxId);
         retryAfterEntity.setStreamId(streamId.toString());
         retryAfterEntity.setRetryAfter(retrieveRetryAfter(xPagopaPnCxId));

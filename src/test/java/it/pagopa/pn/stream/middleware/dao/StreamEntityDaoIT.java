@@ -3,7 +3,7 @@ package it.pagopa.pn.stream.middleware.dao;
 import it.pagopa.pn.stream.BaseTest;
 import it.pagopa.pn.stream.middleware.dao.dynamo.StreamEntityDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
-import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamRetryAfter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +42,13 @@ class StreamEntityDaoIT extends BaseTest.WithLocalStack {
     @Test
     void getWithRetryAfter_returnsTupleOfStreamEntityAndOptionalRetryAfterFound() {
         streamEntityDaoDynamo.save(new StreamEntity("paId7","streamId7")).block();
-        WebhookStreamRetryAfter webhookStreamRetryAfter = new WebhookStreamRetryAfter();
-        webhookStreamRetryAfter.setStreamId("streamId7");
-        webhookStreamRetryAfter.setPaId("paId7");
-        webhookStreamRetryAfter.setRetryAfter(Instant.now());
-        streamEntityDaoDynamo.updateStreamRetryAfter(webhookStreamRetryAfter).block();
+        StreamRetryAfter streamRetryAfter = new StreamRetryAfter();
+        streamRetryAfter.setStreamId("streamId7");
+        streamRetryAfter.setPaId("paId7");
+        streamRetryAfter.setRetryAfter(Instant.now());
+        streamEntityDaoDynamo.updateStreamRetryAfter(streamRetryAfter).block();
 
-        Tuple2<StreamEntity, Optional<WebhookStreamRetryAfter>> tuple = streamEntityDaoDynamo.getWithRetryAfter("paId7", "streamId7").block();
+        Tuple2<StreamEntity, Optional<StreamRetryAfter>> tuple = streamEntityDaoDynamo.getWithRetryAfter("paId7", "streamId7").block();
         assert tuple != null;
         Assertions.assertEquals("paId7", tuple.getT1().getPaId());
         Assertions.assertEquals("streamId7", tuple.getT1().getStreamId());
@@ -60,7 +60,7 @@ class StreamEntityDaoIT extends BaseTest.WithLocalStack {
     @Test
     void getWithRetryAfter_returnsTupleOfStreamEntityAndOptionalRetryAfterNotFound() {
         streamEntityDaoDynamo.save(new StreamEntity("paId8","streamId8")).block();
-        Tuple2<StreamEntity, Optional<WebhookStreamRetryAfter>> tuple = streamEntityDaoDynamo.getWithRetryAfter("paId8", "streamId8").block();
+        Tuple2<StreamEntity, Optional<StreamRetryAfter>> tuple = streamEntityDaoDynamo.getWithRetryAfter("paId8", "streamId8").block();
         assert tuple != null;
         Assertions.assertEquals("paId8", tuple.getT1().getPaId());
         Assertions.assertEquals("streamId8", tuple.getT1().getStreamId());

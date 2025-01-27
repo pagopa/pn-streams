@@ -24,7 +24,7 @@ import it.pagopa.pn.stream.middleware.dao.dynamo.StreamNotificationDao;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.EventEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamEntity;
 import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamNotificationEntity;
-import it.pagopa.pn.stream.middleware.dao.dynamo.entity.WebhookStreamRetryAfter;
+import it.pagopa.pn.stream.middleware.dao.dynamo.entity.StreamRetryAfter;
 import it.pagopa.pn.stream.middleware.externalclient.pnclient.delivery.PnDeliveryClientReactive;
 import it.pagopa.pn.stream.service.ConfidentialInformationService;
 import it.pagopa.pn.stream.service.SchedulerService;
@@ -32,7 +32,6 @@ import it.pagopa.pn.stream.service.TimelineService;
 import it.pagopa.pn.stream.service.utils.StreamUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -535,15 +534,15 @@ class EventsServiceImplTest {
 
         TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
 
-        WebhookStreamRetryAfter webhookStreamRetryAfter = new WebhookStreamRetryAfter();
-        webhookStreamRetryAfter.setPaId(xpagopacxid);
-        webhookStreamRetryAfter.setStreamId(uuid);
-        webhookStreamRetryAfter.setRetryAfter(Instant.now().plusMillis(10000));
+        StreamRetryAfter streamRetryAfter = new StreamRetryAfter();
+        streamRetryAfter.setPaId(xpagopacxid);
+        streamRetryAfter.setStreamId(uuid);
+        streamRetryAfter.setRetryAfter(Instant.now().plusMillis(10000));
 
 
         lasteventid = list.get(0).getEventId();
 
-        when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.of(webhookStreamRetryAfter))));
+        when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.of(streamRetryAfter))));
         Mockito.doNothing().when(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
         when(webhookUtils.getTimelineInternalFromEvent(Mockito.any())).thenReturn(timelineElementInternal);
         when(eventEntityDao.findByStreamId(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(eventEntityBatch));
@@ -608,15 +607,15 @@ class EventsServiceImplTest {
 
         TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
 
-        WebhookStreamRetryAfter webhookStreamRetryAfter = new WebhookStreamRetryAfter();
-        webhookStreamRetryAfter.setPaId(xpagopacxid);
-        webhookStreamRetryAfter.setStreamId(uuid);
-        webhookStreamRetryAfter.setRetryAfter(Instant.now().plusMillis(10000));
+        StreamRetryAfter streamRetryAfter = new StreamRetryAfter();
+        streamRetryAfter.setPaId(xpagopacxid);
+        streamRetryAfter.setStreamId(uuid);
+        streamRetryAfter.setRetryAfter(Instant.now().plusMillis(10000));
 
 
         lasteventid = list.get(0).getEventId();
 
-        when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.of(webhookStreamRetryAfter))));
+        when(streamEntityDao.getWithRetryAfter(xpagopacxid, uuid)).thenReturn(Mono.just(Tuples.of(entity, Optional.of(streamRetryAfter))));
         Mockito.doNothing().when(schedulerService).scheduleStreamEvent(Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.any());
         when(webhookUtils.getTimelineInternalFromEvent(Mockito.any())).thenReturn(timelineElementInternal);
         when(eventEntityDao.findByStreamId(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(eventEntityBatch));
