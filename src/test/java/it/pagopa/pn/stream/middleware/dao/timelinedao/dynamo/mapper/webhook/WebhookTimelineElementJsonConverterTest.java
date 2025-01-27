@@ -1,12 +1,12 @@
 package it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook.WebhookTimelineElementEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WebhookTimelineElementJsonConverterTest {
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -173,6 +173,13 @@ class WebhookTimelineElementJsonConverterTest {
 
         assertNotNull(timelineElementEntity);
         assertNotNull(timelineElementEntity.getDetails());
+    }
+
+    @Test
+    void jsonToEntity_invalidJson() {
+        String json = "{invalidJson}";
+
+        assertThrows(PnInternalException.class, () -> converter.jsonToEntity(json));
     }
 
 }
