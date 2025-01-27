@@ -1011,6 +1011,7 @@ class EventsServiceImplTest {
         entity.setFilterValues(new HashSet<>());
         entity.getFilterValues().add(TimelineElementCategoryInt.AAR_GENERATION.name());
         entity.setActivationDate(Instant.now());
+        entity.setVersion("V23");
         entity.setEventAtomicCounter(1L);
         list.add(entity);
 
@@ -1057,7 +1058,6 @@ class EventsServiceImplTest {
         Mockito.when(streamEntityDao.updateAndGetAtomicCounter(list.get(1))).thenReturn(Mono.just(3L));
         Mockito.when(eventEntityDao.saveWithCondition(Mockito.any(EventEntity.class))).thenReturn(Mono.empty());
         Mockito.when(streamNotificationDao.findByIun(Mockito.anyString())).thenReturn(Mono.just(streamNotificationEntity));
-
 
         //WHEN
         webhookEventsService.saveEvent(newtimeline1 ).block(d);
@@ -1262,6 +1262,7 @@ class EventsServiceImplTest {
         streamEntity.setFilterValues(Set.of("DEFAULT"));
         streamEntity.setActivationDate(Instant.now());
         streamEntity.setEventAtomicCounter(1L);
+        streamEntity.setVersion("V23");
         streamEntity.setGroups(groupsList);
         streamEntityList.add(streamEntity);
 
@@ -1284,6 +1285,7 @@ class EventsServiceImplTest {
                 .thenReturn(Mono.just(2L));
 
         Mockito.when(eventEntityDao.saveWithCondition(Mockito.any())).thenReturn(Mono.empty());
+        when(webhookUtils.getVersion("V23")).thenReturn(23);
 
         //WHEN
         webhookEventsService.saveEvent(newtimeline1)

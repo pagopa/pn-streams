@@ -86,59 +86,59 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
 
     @Override
     public Mono<ProgressResponseElementDto> consumeEventStream(String xPagopaPnCxId,
-        List<String> xPagopaPnCxGroups,
-        String xPagopaPnApiVersion,
-        UUID streamId,
-        String lastEventId) {
+                                                               List<String> xPagopaPnCxGroups,
+                                                               String xPagopaPnApiVersion,
+                                                               UUID streamId,
+                                                               String lastEventId) {
         String msg = "consumeEventStream xPagopaPnCxId={}, xPagopaPnCxGroups={}, xPagopaPnApiVersion={}, streamId={} ";
         String[] args = {xPagopaPnCxId, groupString(xPagopaPnCxGroups), xPagopaPnApiVersion, streamId.toString()};
         generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).log();
         // grazie al contatore atomico usato in scrittura per generare l'eventId, non serve più gestire la finestra.
         return getStreamEntityToWrite(apiVersion(xPagopaPnApiVersion), xPagopaPnCxId, xPagopaPnCxGroups, streamId, true)
-            .doOnError(error -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateFailure("Error in reading stream").log())
-            .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Cannot consume stream")))
-            .flatMap(stream -> eventEntityDao.findByStreamId(stream.getStreamId(), lastEventId))
+                .doOnError(error -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateFailure("Error in reading stream").log())
+                .switchIfEmpty(Mono.error(new PnStreamForbiddenException("Cannot consume stream")))
+                .flatMap(stream -> eventEntityDao.findByStreamId(stream.getStreamId(), lastEventId))
                 .flatMap(res ->
-                    toEventTimelineInternalFromEventEntity(res.getEvents())
-                            .onErrorResume(ex -> Mono.error(new PnInternalException("Timeline element entity not converted into JSON", ERROR_CODE_PN_GENERIC_ERROR)))
-                            //timeline ancora anonimizzato - EventEntity + TimelineElementInternal
-                            .collectList()
-                            .map(items -> {
-                                generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateSuccess("timelineElementIds {}", createAuditLogOfElementsId(items)).log();
-                                return items;
-                            })
-                            // chiamo timelineService per aggiungere le confidentialInfo
-                            .flatMapMany(items -> {
-                                if (streamUtils.getVersion(xPagopaPnApiVersion) == 10)
-                                    return Flux.fromStream(items.stream());
-                                return addConfidentialInformationAtEventTimelineList(removeDuplicatedItems(items));
-                            })
-                            // converto l'eventTimelineInternalDTO in ProgressResponseElementV26
-                            .map(this::getProgressResponseFromEventTimeline)
-                            .sort(Comparator.comparing(ProgressResponseElementV26::getEventId))
-                            .collectList()
-                            .flatMap(eventList -> {
-                                if (eventList.isEmpty()) {
-                                    return streamEntityDao.updateStreamRetryAfter(constructNewRetryAfterEntity(xPagopaPnCxId, streamId))
-                                            .thenReturn(eventList);
-                                }
-                                return Mono.just(eventList);
-                            })
-                            .map(eventList -> {
-                                var retryAfter = pnStreamConfigs.getScheduleInterval().intValue();
-                                int currentRetryAfter = res.getLastEventIdRead() == null ? retryAfter : 0;
-                                var purgeDeletionWaittime = pnStreamConfigs.getPurgeDeletionWaittime();
-                                log.info("consumeEventStream lastEventId={} streamId={} size={} returnedlastEventId={} retryAfter={}", lastEventId, streamId, eventList.size(), (!eventList.isEmpty()?eventList.get(eventList.size()-1).getEventId():"ND"), currentRetryAfter);
-                                // schedulo la pulizia per gli eventi precedenti a quello richiesto
-                                schedulerService.scheduleStreamEvent(res.getStreamId(), lastEventId, purgeDeletionWaittime, StreamEventType.PURGE_STREAM_OLDER_THAN);
-                                // ritorno gli eventi successivi all'evento di buffer, FILTRANDO quello con lastEventId visto che l'ho sicuramente già ritornato
-                                return ProgressResponseElementDto.builder()
-                                        .retryAfter(currentRetryAfter)
-                                        .progressResponseElementList(eventList)
-                                        .build();
-                            })
-                            .doOnSuccess(progressResponseElementDto -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateSuccess("ProgressResponseElementDto size={}", progressResponseElementDto.getProgressResponseElementList().size()).log())
-                            .doOnError(error -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateFailure("Error in consumeEventStream").log())
+                        toEventTimelineInternalFromEventEntity(res.getEvents())
+                                .onErrorResume(ex -> Mono.error(new PnInternalException("Timeline element entity not converted into JSON", ERROR_CODE_PN_GENERIC_ERROR)))
+                                //timeline ancora anonimizzato - EventEntity + TimelineElementInternal
+                                .collectList()
+                                .map(items -> {
+                                    generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateSuccess("timelineElementIds {}", createAuditLogOfElementsId(items)).log();
+                                    return items;
+                                })
+                                // chiamo timelineService per aggiungere le confidentialInfo
+                                .flatMapMany(items -> {
+                                    if (streamUtils.getVersion(xPagopaPnApiVersion) == 10)
+                                        return Flux.fromStream(items.stream());
+                                    return addConfidentialInformationAtEventTimelineList(removeDuplicatedItems(items));
+                                })
+                                // converto l'eventTimelineInternalDTO in ProgressResponseElementV26
+                                .map(this::getProgressResponseFromEventTimeline)
+                                .sort(Comparator.comparing(ProgressResponseElementV26::getEventId))
+                                .collectList()
+                                .flatMap(eventList -> {
+                                    if (eventList.isEmpty()) {
+                                        return streamEntityDao.updateStreamRetryAfter(constructNewRetryAfterEntity(xPagopaPnCxId, streamId))
+                                                .thenReturn(eventList);
+                                    }
+                                    return Mono.just(eventList);
+                                })
+                                .map(eventList -> {
+                                    var retryAfter = pnStreamConfigs.getScheduleInterval().intValue();
+                                    int currentRetryAfter = res.getLastEventIdRead() == null ? retryAfter : 0;
+                                    var purgeDeletionWaittime = pnStreamConfigs.getPurgeDeletionWaittime();
+                                    log.info("consumeEventStream lastEventId={} streamId={} size={} returnedlastEventId={} retryAfter={}", lastEventId, streamId, eventList.size(), (!eventList.isEmpty() ? eventList.get(eventList.size() - 1).getEventId() : "ND"), currentRetryAfter);
+                                    // schedulo la pulizia per gli eventi precedenti a quello richiesto
+                                    schedulerService.scheduleStreamEvent(res.getStreamId(), lastEventId, purgeDeletionWaittime, StreamEventType.PURGE_STREAM_OLDER_THAN);
+                                    // ritorno gli eventi successivi all'evento di buffer, FILTRANDO quello con lastEventId visto che l'ho sicuramente già ritornato
+                                    return ProgressResponseElementDto.builder()
+                                            .retryAfter(currentRetryAfter)
+                                            .progressResponseElementList(eventList)
+                                            .build();
+                                })
+                                .doOnSuccess(progressResponseElementDto -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateSuccess("ProgressResponseElementDto size={}", progressResponseElementDto.getProgressResponseElementList().size()).log())
+                                .doOnError(error -> generateAuditLog(PnAuditLogEventType.AUD_WH_CONSUME, msg, args).generateFailure("Error in consumeEventStream").log())
                 );
     }
 
@@ -149,8 +149,8 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
 
         items.forEach(timelineElement -> {
             List<String> elements = iunWithTimelineElementId.get(timelineElement.getEventEntity().getIun());
-            String description = timelineElement.getEventEntity().getEventDescription().replace(".IUN_"+timelineElement.getEventEntity().getIun(), "");
-            if(elements == null) {
+            String description = timelineElement.getEventEntity().getEventDescription().replace(".IUN_" + timelineElement.getEventEntity().getIun(), "");
+            if (elements == null) {
                 elements = new ArrayList<>(Collections.singletonList(description));
             } else {
                 elements.add(description);
@@ -191,7 +191,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         return response;
     }
 
-    private Flux<EventTimelineInternalDto> toEventTimelineInternalFromEventEntity(List<EventEntity> events) throws PnInternalException{
+    private Flux<EventTimelineInternalDto> toEventTimelineInternalFromEventEntity(List<EventEntity> events) throws PnInternalException {
         return Flux.fromStream(events.stream())
                 .map(item -> {
                     TimelineElementInternal timelineElementInternal = getTimelineInternalFromEventEntity(item);
@@ -202,7 +202,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
                 });
     }
 
-    private TimelineElementInternal getTimelineInternalFromEventEntity(EventEntity entity) throws PnInternalException{
+    private TimelineElementInternal getTimelineInternalFromEventEntity(EventEntity entity) throws PnInternalException {
         if (StringUtils.hasText(entity.getElement())) {
             return streamUtils.getTimelineInternalFromEvent(entity);
         }
@@ -214,17 +214,16 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         return streamEntityDao.findByPa(timelineElementInternal.getPaId())
                 .filter(entity -> entity.getDisabledDate() == null)
                 .collectList()
-            .flatMap(stream -> {
-                if (stream.isEmpty()) {
-                    return Mono.empty();
-                }
-                else {
-                    return getNotification(timelineElementInternal.getIun())
-                            .map(notification -> Tuples.of(stream, timelineElementInternal, notification));
-                }
-            })
-            .flatMapMany(res -> Flux.fromIterable(res.getT1())
-                .flatMap(stream -> processEvent(stream, res.getT2(), res.getT3().getGroup()))).collectList().then();
+                .flatMap(stream -> {
+                    if (stream.isEmpty()) {
+                        return Mono.empty();
+                    } else {
+                        return getNotification(timelineElementInternal.getIun())
+                                .map(notification -> Tuples.of(stream, timelineElementInternal, notification));
+                    }
+                })
+                .flatMapMany(res -> Flux.fromIterable(res.getT1())
+                        .flatMap(stream -> processEvent(stream, res.getT2(), res.getT3().getGroup()))).collectList().then();
     }
 
     public Mono<StreamNotificationEntity> getNotification(String iun) {
@@ -245,7 +244,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
 
     private Mono<Void> processEvent(StreamEntity stream, TimelineElementInternal timelineElementInternal, String groups) {
 
-        if (!CollectionUtils.isEmpty(stream.getGroups()) && !checkGroups(Collections.singletonList(groups), stream.getGroups())){
+        if (!CollectionUtils.isEmpty(stream.getGroups()) && !checkGroups(Collections.singletonList(groups), stream.getGroups())) {
             log.info("skipping saving webhook event for stream={} because stream groups are different", stream.getStreamId());
             return Mono.empty();
         }
@@ -261,7 +260,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         }
 
         String timelineEventCategory = timelineElementInternal.getCategory();
-        if (isDiagnosticElement(timelineElementInternal.getCategory())){
+        if (isDiagnosticElement(timelineElementInternal.getCategory())) {
             log.info("skipping saving webhook event for stream={} because category={} is only diagnostic", stream.getStreamId(), timelineEventCategory);
             return Mono.empty();
         }
@@ -269,11 +268,10 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         Set<String> filteredValues = retrieveFilteredValues(stream, eventType);
 
         log.info("timelineEventCategory={} for stream={}", stream.getStreamId(), timelineEventCategory);
-        if ( (eventType == StreamCreationRequestV26.EventTypeEnum.STATUS && filteredValues.contains(timelineElementInternal.getStatusInfo().getActual()))
-            || (eventType == StreamCreationRequestV26.EventTypeEnum.TIMELINE && filteredValues.contains(timelineEventCategory))) {
+        if ((eventType == StreamCreationRequestV26.EventTypeEnum.STATUS && filteredValues.contains(timelineElementInternal.getStatusInfo().getActual()))
+                || (eventType == StreamCreationRequestV26.EventTypeEnum.TIMELINE && filteredValues.contains(timelineEventCategory))) {
             return saveEventWithAtomicIncrement(stream, timelineElementInternal.getStatusInfo().getActual(), timelineElementInternal);
-        }
-        else {
+        } else {
             log.info("skipping saving webhook event for stream={} because timelineeventcategory is not in list timelineeventcategory={} iun={}", stream.getStreamId(), timelineEventCategory, timelineElementInternal.getIun());
         }
         return Mono.empty();
@@ -282,10 +280,8 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     private Set<String> retrieveFilteredValues(StreamEntity stream, StreamCreationRequestV26.EventTypeEnum eventType) {
         if (eventType == StreamCreationRequestV26.EventTypeEnum.TIMELINE) {
             return categoriesByFilter(stream);
-        } else if (eventType == StreamCreationRequestV26.EventTypeEnum.STATUS){
-            return Objects.isNull(stream.getFilterValues()) || stream.getFilterValues().isEmpty()
-                    ? statusByVersion(streamUtils.getVersion(stream.getVersion()))
-                    : stream.getFilterValues();
+        } else if (eventType == StreamCreationRequestV26.EventTypeEnum.STATUS) {
+            return statusByFilter(stream);
         }
         return Collections.emptySet();
     }
@@ -294,7 +290,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         try {
             TimelineElementCategoryInt.DiagnosticTimelineElementCategory.valueOf(timelineEventCategory);
             return true;
-        }catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             return false;
         }
     }
@@ -321,50 +317,64 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     public Mono<Void> purgeEvents(String streamId, String eventId, boolean olderThan) {
         log.info("purgeEvents streamId={} eventId={} olderThan={}", streamId, eventId, olderThan);
         return eventEntityDao.delete(streamId, eventId, olderThan)
-            .map(thereAreMore -> {
-                if (Boolean.TRUE.equals(thereAreMore))
-                {
-                    var purgeDeletionWaittime = pnStreamConfigs.getPurgeDeletionWaittime();
-                    log.info("purgeEvents streamId={} eventId={} olderThan={} there are more event to purge", streamId, eventId, olderThan);
-                    schedulerService.scheduleStreamEvent(streamId, eventId, purgeDeletionWaittime, olderThan? StreamEventType.PURGE_STREAM_OLDER_THAN: StreamEventType.PURGE_STREAM);
-                }
-                else
-                    log.info("purgeEvents streamId={} eventId={} olderThan={} no more event to purge", streamId, eventId, olderThan);
+                .map(thereAreMore -> {
+                    if (Boolean.TRUE.equals(thereAreMore)) {
+                        var purgeDeletionWaittime = pnStreamConfigs.getPurgeDeletionWaittime();
+                        log.info("purgeEvents streamId={} eventId={} olderThan={} there are more event to purge", streamId, eventId, olderThan);
+                        schedulerService.scheduleStreamEvent(streamId, eventId, purgeDeletionWaittime, olderThan ? StreamEventType.PURGE_STREAM_OLDER_THAN : StreamEventType.PURGE_STREAM);
+                    } else
+                        log.info("purgeEvents streamId={} eventId={} olderThan={} no more event to purge", streamId, eventId, olderThan);
 
-                return thereAreMore;
-            })
-            .then();
+                    return thereAreMore;
+                })
+                .then();
     }
 
     private Set<String> categoriesByVersion(int version) {
         return Arrays.stream(TimelineElementCategoryInt.values())
-            .filter( e -> e.getVersion() <= TimelineElementCategoryInt.StreamVersions.fromIntValue(version).getTimelineVersion())
-            .map(Enum::name)
-            .collect(Collectors.toSet());
+                .filter(e -> e.getVersion() <= TimelineElementCategoryInt.StreamVersions.fromIntValue(version).getTimelineVersion())
+                .map(Enum::name)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> statusByVersion(int version) {
         return Arrays.stream(NotificationStatusInt.values())
-            .filter( e -> e.getVersion() <= TimelineElementCategoryInt.StreamVersions.fromIntValue(version).getStatusVersion())
-            .map(NotificationStatusInt::getValue)
-            .collect(Collectors.toSet());
+                .filter(e -> e.getVersion() <= TimelineElementCategoryInt.StreamVersions.fromIntValue(version).getStatusVersion())
+                .map(NotificationStatusInt::getValue)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> categoriesByFilter(StreamEntity stream) {
-        Set<String> categoriesSet;
-        if (CollectionUtils.isEmpty(stream.getFilterValues())){
-            categoriesSet = categoriesByVersion(streamUtils.getVersion(stream.getVersion()));
-        } else {
-            categoriesSet = stream.getFilterValues().stream()
-                    .filter(v -> !v.equalsIgnoreCase(DEFAULT_CATEGORIES))
-                    .collect(Collectors.toSet());
-            if (stream.getFilterValues().contains(DEFAULT_CATEGORIES)) {
-                log.debug("pnStreamConfigs.getListCategoriesPa[0]={}", pnStreamConfigs.getListCategoriesPa().get(0));
-                categoriesSet.addAll(pnStreamConfigs.getListCategoriesPa());
-            }
+        Set<String> versionedCategoriesSet = categoriesByVersion(streamUtils.getVersion(stream.getVersion()));
+
+        if (CollectionUtils.isEmpty(stream.getFilterValues())) {
+            return versionedCategoriesSet;
         }
-        return categoriesSet;
+
+        Set<String> categoriesSet = stream.getFilterValues().stream()
+                .filter(v -> !v.equalsIgnoreCase(DEFAULT_CATEGORIES))
+                .collect(Collectors.toSet());
+
+        if (stream.getFilterValues().contains(DEFAULT_CATEGORIES)) {
+            log.debug("pnDeliveryPushConfigs.getListCategoriesPa[0]={}", pnStreamConfigs.getListCategoriesPa().get(0));
+            categoriesSet.addAll(pnStreamConfigs.getListCategoriesPa());
+        }
+
+        return categoriesSet.stream()
+                .filter(versionedCategoriesSet::contains)
+                .collect(Collectors.toSet());
     }
+
+    private Set<String> statusByFilter(StreamEntity stream) {
+        Set<String> versionedStatusSet = statusByVersion(streamUtils.getVersion(stream.getVersion()));
+        if (CollectionUtils.isEmpty(stream.getFilterValues())) {
+            return versionedStatusSet;
+        }
+        return stream.getFilterValues().stream()
+                .filter(versionedStatusSet::contains) // Qualsiasi stato non appartenente alla versione di riferimento dello stream viene scartato
+                .collect(Collectors.toSet());
+    }
+
     private List<EventTimelineInternalDto> removeDuplicatedItems(List<EventTimelineInternalDto> eventEntities) {
         return new ArrayList<>(eventEntities.stream()
                 .collect(Collectors.toMap(
@@ -382,13 +392,13 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
 
         return confidentialInformationService.getTimelineConfidentialInformation(timelineElementInternals)
                 .map(confidentialInfo -> timelineElementInternals.stream()
-                            .filter(i -> i.getElementId().equals(confidentialInfo.getTimelineElementId()))
-                            .findFirst()
-                            .map(timelineElementInternal -> {
-                                timelineElementInternal.setDetails(timelineService.enrichTimelineElementWithConfidentialInformation(timelineElementInternal.getCategory(), timelineElementInternal.getDetails(), confidentialInfo));
-                                return timelineElementInternal;
-                            })
-                            .orElse(null)
+                        .filter(i -> i.getElementId().equals(confidentialInfo.getTimelineElementId()))
+                        .findFirst()
+                        .map(timelineElementInternal -> {
+                            timelineElementInternal.setDetails(timelineService.enrichTimelineElementWithConfidentialInformation(timelineElementInternal.getCategory(), timelineElementInternal.getDetails(), confidentialInfo));
+                            return timelineElementInternal;
+                        })
+                        .orElse(null)
                 )
                 .collectList()
                 .flatMapMany(item -> Flux.fromStream(eventEntities.stream()));
