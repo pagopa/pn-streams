@@ -1238,7 +1238,6 @@ class EventsServiceImplTest {
     }
 
     @Test
-    @Disabled
     void saveEventWhenFilteredValueIsDefaultCategoriesPA() {
         //GIVEN
         String xpagopacxid = "PA-xpagopacxid";
@@ -1284,7 +1283,7 @@ class EventsServiceImplTest {
         Mockito.when(streamEntityDao.updateAndGetAtomicCounter(streamEntityList.get(0)))
                 .thenReturn(Mono.just(2L));
 
-        Mockito.when(eventEntityDao.saveWithCondition(Mockito.any(EventEntity.class))).thenReturn(Mono.just(new EventEntity()));
+        Mockito.when(eventEntityDao.saveWithCondition(Mockito.any())).thenReturn(Mono.empty());
 
         //WHEN
         webhookEventsService.saveEvent(newtimeline1)
@@ -1296,7 +1295,7 @@ class EventsServiceImplTest {
         Mockito.verify(streamEntityDao, Mockito.times(1))
                 .updateAndGetAtomicCounter(Mockito.any());
         Mockito.verify(eventEntityDao, Mockito.times(1))
-                .save(Mockito.any());
+                .saveWithCondition(Mockito.any());
         Mockito.verify(pnDeliveryClientReactive, Mockito.times(1))
                 .getSentNotification(anyString());
     }

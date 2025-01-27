@@ -1,16 +1,12 @@
 package it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.mapper.webhook;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.stream.middleware.dao.timelinedao.dynamo.entity.webhook.WebhookTimelineElementEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import static it.pagopa.pn.commons.exceptions.PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WebhookTimelineElementJsonConverterTest {
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -23,7 +19,19 @@ class WebhookTimelineElementJsonConverterTest {
         this.converter = new WebhookTimelineElementJsonConverter(this.objectMapper);
     }
 
+    @Test
+    void test_convertEntityToJson() {
+        String iun = "ABC-DEFGHI-LM12-353-FSA";
+        WebhookTimelineElementEntity entity = new WebhookTimelineElementEntity();
+        entity.setIun(iun);
 
+        String expected = """
+        {"iun":"ABC-DEFGHI-LM12-353-FSA"}""";
+
+        String json = converter.entityToJson(entity);
+        assertNotNull(json);
+        assertTrue(json.contains(expected));
+    }
 
     @Test
     void test_convertJsonEntity() {
