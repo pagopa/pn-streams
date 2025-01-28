@@ -105,7 +105,7 @@ describe("event handler tests", function () {
       },
       "./lib/kinesis.js": {
         extractKinesisData: () => {
-          return [{payload: '1', kinesisSeqNumber: 'test'}];
+          return [{payload: '1', kinesisSeqNumber: 'test', timestamp: "2000-01-01T00:00:00Z"}];
         },
       },
       "./lib/eventMapper.js": {

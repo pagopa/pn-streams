@@ -148,14 +148,14 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
         HashMap<String, List<String>> iunWithTimelineElementId = new HashMap<>();
 
         items.forEach(timelineElement -> {
-            List<String> elements = iunWithTimelineElementId.get(timelineElement.getEventEntity().getIun());
-            String description = timelineElement.getEventEntity().getEventDescription().replace(".IUN_" + timelineElement.getEventEntity().getIun(), "");
+            List<String> elements = iunWithTimelineElementId.get(timelineElement.getTimelineElementInternal().getIun());
+            String description = timelineElement.getEventEntity().getEventDescription().replace(".IUN_" + timelineElement.getTimelineElementInternal().getIun(), "");
             if (elements == null) {
                 elements = new ArrayList<>(Collections.singletonList(description));
             } else {
                 elements.add(description);
             }
-            iunWithTimelineElementId.put(timelineElement.getEventEntity().getIun(), elements);
+            iunWithTimelineElementId.put(timelineElement.getTimelineElementInternal().getIun(), elements);
         });
 
         iunWithTimelineElementId.keySet().forEach(iun -> rootNode.put(iun, iunWithTimelineElementId.get(iun).toString()));

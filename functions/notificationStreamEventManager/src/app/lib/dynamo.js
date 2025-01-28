@@ -10,6 +10,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 function buildNotificationItem(newImage, tableName, ttlOffset) {
   const parsedData = unmarshall(newImage);
+  console.log(parsedData);
   const now = Math.floor(Date.now() / 1000);
   const ttl = Math.max(now + ttlOffset, 0);
 
@@ -19,17 +20,15 @@ function buildNotificationItem(newImage, tableName, ttlOffset) {
   }
 
   return {
-    TableName: tableName,
-    Item: {
-      hashKey: { S: parsedData.iun },
-      group: { S: parsedData.group ? parsedData.group : null},
-      creationDate: { S: parsedData.sentAt },
-      ttl: { N: ttl.toString() },
-    },
-  };
+      hashKey: parsedData.iun,
+      group: parsedData.group ? parsedData.group : null,
+      creationDate: parsedData.sentAt ? parsedData.sentAt : null,
+      ttl: ttl.toString(),
+      };
 }
 
 async function putNotificationItem(item) {
+  console.log(item);
   const command = new PutCommand({
     TableName: process.env.TABLE_NAME,
     Item: item,

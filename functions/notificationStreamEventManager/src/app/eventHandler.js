@@ -3,6 +3,11 @@ const { putNotificationItem, buildNotificationItem } = require("../app/lib/dynam
 
 exports.handleEvent = async (event) => {
 
+  if (Date.now() < new Date(`${process.env.START_READ_STREAM_TIMESTAMP}`) || Date.now() >= new Date(`${process.env.STOP_READ_STREAM_TIMESTAMP}`)) {
+    console.log('Skipping event with id: ', event.eventID);
+    return null;
+  }
+
   const TABLE_NAME = process.env.TABLE_NAME;
   const TTL_OFFSET = process.env.TTL_OFFSET;
 
