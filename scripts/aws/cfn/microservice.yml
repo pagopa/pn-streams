@@ -520,6 +520,8 @@ Resources:
           REGION: !Sub ${AWS::Region}
           TABLE_NAME: !Sub '${StreamNotificationTableName}'
           TTL_OFFSET: !Sub '${StreamNotificationTtl}'
+          START_READ_STREAM_TIMESTAMP: !Sub '${StartReadStreamTimestamp}'
+          STOP_READ_STREAM_TIMESTAMP: !Sub '${StopReadStreamTimestamp}'
       TracingConfig:
         Mode: Active
       Layers:
