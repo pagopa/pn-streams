@@ -1,4 +1,3 @@
-const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const crypto = require('crypto');
 
 exports.mapEvents = (events) => {
@@ -6,13 +5,13 @@ exports.mapEvents = (events) => {
 
   for (let i = 0; i < events.length; i++) {
 
-    let timelineObj = unmarshall(events[i].dynamodb.NewImage);
+    let timelineEvent = events[i];
 
     let date = new Date();
 
     let action = {
-      event: timelineObj,
-      eventId: `${date.toISOString()}_${timelineObj.timelineElementId}`,
+      timelineElementInternal: timelineEvent.timelineObject,
+      eventId: `${date.toISOString()}_${timelineEvent.timelineObject.timelineElementId}`,
       type: 'REGISTER_EVENT'
     };
 
@@ -23,7 +22,7 @@ exports.mapEvents = (events) => {
       },
       iun: {
         DataType: 'String',
-        StringValue: timelineObj.iun
+        StringValue: timelineEvent.timelineObject.iun
       },
       eventId: {
         DataType: 'String',

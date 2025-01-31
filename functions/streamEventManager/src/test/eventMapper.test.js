@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const fs = require("fs");
-
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const { mapEvents } = require("../app/lib/eventMapper");
 
 describe("event mapper tests", function () {
@@ -11,16 +11,16 @@ describe("event mapper tests", function () {
     let event = JSON.parse(eventJSON);
     event = setCategory(event, "REQUEST_REFUSED");
 
-    const events = [event];
+    const events = [{timelineObject : {...unmarshall(event.dynamodb.NewImage)}}];
 
     const res = await mapEvents(events);
 
     console.log(res[0]);
 
     let body = JSON.parse(res[0].MessageBody);
-    expect(body.event.iun).equal("abcd");
-    expect(body.event.paId).equal("026e8c72-7944-4dcd-8668-f596447fec6d");
-    expect(body.event.timelineElementId).equal("notification_viewed_creation_request;IUN_XLDW-MQYJ-WUKA-202302-A-1;RECINDEX_1");
+    expect(body.timelineElementInternal.iun).equal("abcd");
+    expect(body.timelineElementInternal.paId).equal("026e8c72-7944-4dcd-8668-f596447fec6d");
+    expect(body.timelineElementInternal.timelineElementId).equal("notification_viewed_creation_request;IUN_XLDW-MQYJ-WUKA-202302-A-1;RECINDEX_1");
     expect(body.type).equal("REGISTER_EVENT");
 
     expect(res[0].MessageAttributes.publisher.StringValue).equal("deliveryPush");

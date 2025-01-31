@@ -32,7 +32,7 @@ public class ActionHandler {
 
                 log.debug("Handle action pnStreamActionConsumer, with content {}", message);log.debug("pnStreamActionConsumer, message={}", message);
                 StreamAction action = message.getPayload();
-                HandleEventUtils.addIunToMdc(action.getTimelineElementInternal().getIun());
+                HandleEventUtils.addIunToMdc(action.getTimelineElementInternal() != null ? action.getTimelineElementInternal().getIun() : action.getIun());
 
                 log.logStartingProcess(processName);
                 streamActionsEventHandler.handleEvent(action);
