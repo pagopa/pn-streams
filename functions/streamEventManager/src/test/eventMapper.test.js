@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const fs = require("fs");
-
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const { mapEvents } = require("../app/lib/eventMapper");
 
 describe("event mapper tests", function () {
@@ -11,7 +11,7 @@ describe("event mapper tests", function () {
     let event = JSON.parse(eventJSON);
     event = setCategory(event, "REQUEST_REFUSED");
 
-    const events = [event];
+    const events = [unmarshall(event.dynamodb.NewImage)];
 
     const res = await mapEvents(events);
 

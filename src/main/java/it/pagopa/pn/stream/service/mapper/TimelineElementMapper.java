@@ -29,7 +29,7 @@ public class TimelineElementMapper {
                     .notificationSentAt(internalDto.getNotificationSentAt())
                     .ingestionTimestamp(internalDto.getIngestionTimestamp())
                     .eventTimestamp(internalDto.getEventTimestamp())
-                    .details(objectMapper.readValue(internalDto.getDetails(), TimelineElementDetailsV26.class))
+                    .details(objectMapper.readValue(internalDto.getDetails(), TimelineElementDetailsV26.class).nextSourceAttemptsMade(null))
                     .legalFactsIds(internalDto.getLegalFactsIds());
 
         } catch (JsonProcessingException e) {

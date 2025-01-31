@@ -74,6 +74,7 @@ public class TimeLineServiceImpl implements TimelineService {
 
     private static ObjectNode applyPrepareAnalogDomicileFailure(ObjectNode targetNode, ObjectNode confidentialJson) {
         targetNode.set(FOUND_ADDRESS.getEventValue(), confidentialJson.get(FOUND_ADDRESS.getConfidentialValue()));
+        targetNode.remove(FOUND_ADDRESS.getTimelineKey());
         return targetNode;
     }
 
