@@ -2,7 +2,6 @@
   "Records": [
     {
       "kinesis": {
-        "sequenceNumber": "test",
         "data": {
           "awsRegion": "eu-central-1",
           "eventID": "2c19ee21-4cb5-4fcf-aadb-7aac6555b46f",
@@ -12,34 +11,54 @@
           "tableName": "pn-Timelines",
           "dynamodb": {
             "NewImage": {
-            "iun": {
-                "S": "abcd"
-            },
-            "timelineElementId": {
-                "S": "notification_viewed_creation_request;IUN_XLDW-MQYJ-WUKA-202302-A-1;RECINDEX_1"
-            },
-            "notificationSentAt": {
-                "S": "2025-01-20T14:48:00.000Z"
-            },
-            "timestamp": {
-                "S": "2025-01-20T14:48:00.000Z"
-            },
-            "paId": {
-                "S": "026e8c72-7944-4dcd-8668-f596447fec6d"
-            },
-            "statusInfo" : {
-                "S": "IN_PROGRESS"
-            },
-            "details": {
-                "M": {
-                    "notificationCost": {
-                        "N": 100
-                    },
-                    "notRefinedRecipientIndexes": {
-                        "L": [ {"N": "1"}, {"N": "2"}, {"N": "3"} ]
+                "businessTimestamp": {
+                    "S": "2025-01-31T16:15:34Z"
+                },
+                "category": {
+                    "S": "ANALOG_SUCCESS_WORKFLOW"
+                },
+                "details": {
+                    "M": {
+                        "nextSourceAttemptsMade": {
+                            "N": 0
+                        },
+                        "recIndex": {
+                            "N": 0
+                        }
                     }
+                },
+                "iun": {
+                    "S": "JLPV-MWRV-VEWT-202501-W-1"
+                },
+                "legalFactId": {
+                    "L": [
+                    ]
+                },
+                "notificationSentAt": {
+                    "S": "2025-01-31T15:57:33.945285668Z"
+                },
+                "paId": {
+                    "S": "5b994d4a-0fa8-47ac-9c7b-354f1d44a1ce"
+                },
+                "statusInfo": {
+                    "M": {
+                        "actual": {
+                            "S": "DELIVERED"
+                        },
+                        "statusChanged": {
+                            "BOOL": true
+                        },
+                        "statusChangeTimestamp": {
+                            "S": "2025-01-31T16:15:39.762656057Z"
+                        }
+                    }
+                },
+                "timelineElementId": {
+                    "S": "ANALOG_SUCCESS_WORKFLOW.IUN_JLPV-MWRV-VEWT-202501-W-1.RECINDEX_0"
+                },
+                "timestamp": {
+                    "S": "2025-01-31T16:15:39.713731463Z"
                 }
-              }
             }
           },
           "eventSource": "aws:dynamodb"

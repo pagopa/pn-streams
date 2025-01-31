@@ -9,6 +9,8 @@ exports.mapEvents = (events) => {
 
     let date = new Date();
 
+    timelineEvent.timelineObject.details = JSON.stringify(timelineEvent.timelineObject.details)
+
     let action = {
       timelineElementInternal: timelineEvent.timelineObject,
       eventId: `${date.toISOString()}_${timelineEvent.timelineObject.timelineElementId}`,
