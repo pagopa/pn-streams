@@ -378,7 +378,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
     private List<EventTimelineInternalDto> removeDuplicatedItems(List<EventTimelineInternalDto> eventEntities) {
         return new ArrayList<>(eventEntities.stream()
                 .collect(Collectors.toMap(
-                        dto -> dto.getTimelineElementInternal().getElementId(),
+                        dto -> dto.getTimelineElementInternal().getTimelineElementId(),
                         dto -> dto,
                         (existing, replacement) -> existing
                 )).values());
@@ -392,7 +392,7 @@ public class StreamEventsServiceImpl extends PnStreamServiceImpl implements Stre
 
         return confidentialInformationService.getTimelineConfidentialInformation(timelineElementInternals)
                 .map(confidentialInfo -> timelineElementInternals.stream()
-                        .filter(i -> i.getElementId().equals(confidentialInfo.getTimelineElementId()))
+                        .filter(i -> i.getTimelineElementId().equals(confidentialInfo.getTimelineElementId()))
                         .findFirst()
                         .map(timelineElementInternal -> {
                             timelineElementInternal.setDetails(timelineService.enrichTimelineElementWithConfidentialInformation(timelineElementInternal.getCategory(), timelineElementInternal.getDetails(), confidentialInfo));

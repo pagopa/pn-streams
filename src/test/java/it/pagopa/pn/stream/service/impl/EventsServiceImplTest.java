@@ -106,7 +106,7 @@ class EventsServiceImplTest {
         res.add(TimelineElementInternal.builder()
                 .category(TimelineElementCategoryInt.REQUEST_ACCEPTED.name())
                 .iun(iun)
-                .elementId(iun + "_" + TimelineElementCategoryInt.REQUEST_ACCEPTED )
+                .timelineElementId(iun + "_" + TimelineElementCategoryInt.REQUEST_ACCEPTED )
                 .statusInfo(StatusInfoInternal.builder().actual("ACCEPTED").statusChanged(true).build())
                 .timestamp(t0)
                 .paId(paId)
@@ -114,7 +114,7 @@ class EventsServiceImplTest {
         res.add(TimelineElementInternal.builder()
                 .category(TimelineElementCategoryInt.AAR_GENERATION.name())
                 .iun(iun)
-                .elementId(iun + "_" + TimelineElementCategoryInt.AAR_GENERATION )
+                .timelineElementId(iun + "_" + TimelineElementCategoryInt.AAR_GENERATION )
                 .statusInfo(StatusInfoInternal.builder().actual("REFUSED").statusChanged(true).build())
                 .timestamp(t0.plusMillis(1000))
                 .paId(paId)
@@ -122,7 +122,7 @@ class EventsServiceImplTest {
         res.add(TimelineElementInternal.builder()
                 .category(TimelineElementCategoryInt.SEND_DIGITAL_DOMICILE.name())
                 .iun(iun)
-                .elementId(iun + "_" + TimelineElementCategoryInt.SEND_DIGITAL_DOMICILE )
+                .timelineElementId(iun + "_" + TimelineElementCategoryInt.SEND_DIGITAL_DOMICILE )
                 .statusInfo(StatusInfoInternal.builder().actual("ACCEPTED").statusChanged(true).build())
                 .timestamp(t0.plusMillis(1000))
                 .paId(paId)
@@ -183,7 +183,7 @@ class EventsServiceImplTest {
         eventEntityBatch.setLastEventIdRead(null);
 
         TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
-        timelineElementInternal.setElementId("id");
+        timelineElementInternal.setTimelineElementId("id");
         timelineElementInternal.setTimestamp(Instant.now());
         timelineElementInternal.setIun("Iun");
         timelineElementInternal.setDetails("{\"recIndex\":0,\"digitalAddressSource\":\"GENERAL\",\"isAvailable\":true,\"attemptDate\":\"2025-01-21T15:12:28.172984718Z\",\"nextSourceAttemptsMade\":0}");
@@ -271,7 +271,7 @@ class EventsServiceImplTest {
         eventEntityBatch.setLastEventIdRead(null);
 
         TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
-        timelineElementInternal.setElementId("id");
+        timelineElementInternal.setTimelineElementId("id");
         timelineElementInternal.setTimestamp(Instant.now());
         timelineElementInternal.setIun("Iun");
         timelineElementInternal.setDetails("{\"recIndex\":0,\"digitalAddressSource\":\"GENERAL\",\"isAvailable\":true,\"attemptDate\":\"2025-01-21T15:12:28.172984718Z\",\"nextSourceAttemptsMade\":0}");
@@ -394,7 +394,7 @@ class EventsServiceImplTest {
         eventEntityBatch.setLastEventIdRead(null);
 
         TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
-        timelineElementInternal.setElementId("id");
+        timelineElementInternal.setTimelineElementId("id");
         timelineElementInternal.setTimestamp(Instant.now());
         timelineElementInternal.setIun("Iun");
         timelineElementInternal.setDetails("{\"recIndex\":0,\"digitalAddressSource\":\"GENERAL\",\"isAvailable\":true,\"attemptDate\":\"2025-01-21T15:12:28.172984718Z\",\"nextSourceAttemptsMade\":0}");
@@ -545,7 +545,7 @@ class EventsServiceImplTest {
         eventEntityBatch.setLastEventIdRead(null);
 
         TimelineElementInternal timelineElementInternal = new TimelineElementInternal();
-        timelineElementInternal.setElementId("id");
+        timelineElementInternal.setTimelineElementId("id");
         timelineElementInternal.setTimestamp(Instant.now());
         timelineElementInternal.setIun("VNXR-JKEY-NYRW-202501-D-1");
         timelineElementInternal.setDetails("{\"recIndex\":0,\"digitalAddressSource\":\"GENERAL\",\"isAvailable\":true,\"attemptDate\":\"2025-01-21T15:12:28.172984718Z\",\"nextSourceAttemptsMade\":0}");
@@ -694,7 +694,7 @@ class EventsServiceImplTest {
         eventEntity.setElement("element");
         eventEntity.setNotificationRequestId("notificationRequestId");
         TimelineElementInternal timelineElementInternal = TimelineElementInternal.builder()
-                .elementId("elementId")
+                .timelineElementId("elementId")
                 .category(REQUEST_ACCEPTED.getValue())
                 .timestamp(Instant.now())
                 .paId("paId")
@@ -735,7 +735,7 @@ class EventsServiceImplTest {
         Assertions.assertEquals("channel", dto.getEventEntity().getChannel());
         Assertions.assertEquals("notificationRequestId", dto.getEventEntity().getNotificationRequestId());
 
-        Assertions.assertEquals("elementId", dto.getTimelineElementInternal().getElementId());
+        Assertions.assertEquals("elementId", dto.getTimelineElementInternal().getTimelineElementId());
         Assertions.assertEquals(REQUEST_ACCEPTED.getValue(), dto.getTimelineElementInternal().getCategory());
         Assertions.assertEquals("paId", dto.getTimelineElementInternal().getPaId());
         Assertions.assertEquals("actual", dto.getTimelineElementInternal().getStatusInfo().getActual());
@@ -755,7 +755,7 @@ class EventsServiceImplTest {
         eventEntity.setNotificationRequestId("notificationRequestId");
 
         TimelineElementInternal timelineElementInternal = TimelineElementInternal.builder()
-                .elementId("elementId")
+                .timelineElementId("elementId")
                 .category(REQUEST_ACCEPTED.getValue())
                 .timestamp(Instant.now())
                 .paId("paId")
@@ -920,7 +920,7 @@ class EventsServiceImplTest {
         TimelineElementInternal newtimeline = timeline.get(timeline.size()-1);
         StreamNotificationEntity notificationInt = new StreamNotificationEntity();
         EventEntity eventEntity = new EventEntity();
-        eventEntity.setEventId(Instant.now() + "_" + newtimeline.getElementId());
+        eventEntity.setEventId(Instant.now() + "_" + newtimeline.getTimelineElementId());
         eventEntity.setTimestamp(Instant.now());
         eventEntity.setTimelineEventCategory(TimelineElementCategoryInt.AAR_GENERATION.name());
         eventEntity.setNewStatus(NotificationStatusInt.DELIVERING.getValue());
@@ -1134,7 +1134,7 @@ class EventsServiceImplTest {
         timeline.add(TimelineElementInternal.builder()
                 .category(TimelineElementCategoryInt.NOTIFICATION_CANCELLATION_REQUEST.name())
                 .iun(iun)
-                .elementId(iun + "_" + TimelineElementCategoryInt.NOTIFICATION_CANCELLATION_REQUEST )
+                .timelineElementId(iun + "_" + TimelineElementCategoryInt.NOTIFICATION_CANCELLATION_REQUEST )
                 .timestamp(Instant.now())
                 .paId(xpagopacxid)
                 .build());
@@ -1142,7 +1142,7 @@ class EventsServiceImplTest {
         timeline.add(TimelineElementInternal.builder()
                 .category(TimelineElementCategoryInt.NOTIFICATION_CANCELLED.name())
                 .iun(iun)
-                .elementId(iun + "_" + TimelineElementCategoryInt.NOTIFICATION_CANCELLED )
+                .timelineElementId(iun + "_" + TimelineElementCategoryInt.NOTIFICATION_CANCELLED )
                 .timestamp(Instant.now())
                 .paId(xpagopacxid)
                 .build());
@@ -1150,7 +1150,7 @@ class EventsServiceImplTest {
         timeline.add(TimelineElementInternal.builder()
                 .category(TimelineElementCategoryInt.PROBABLE_SCHEDULING_ANALOG_DATE.name())
                 .iun(iun)
-                .elementId(iun + "_" + TimelineElementCategoryInt.PROBABLE_SCHEDULING_ANALOG_DATE )
+                .timelineElementId(iun + "_" + TimelineElementCategoryInt.PROBABLE_SCHEDULING_ANALOG_DATE )
                 .timestamp(Instant.now())
                 .paId(xpagopacxid)
                 .build());

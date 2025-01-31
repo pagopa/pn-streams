@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TimelineElementInternal{
     private String iun;
-    private String elementId;
+    private String timelineElementId;
     private Instant timestamp;
     private String paId;
     private List<LegalFactsIdV20> legalFactsIds;
