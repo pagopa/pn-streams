@@ -1,19 +1,19 @@
 package it.pagopa.pn.stream.dto.timeline;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.Instant;
 
 @Getter
+@Setter
 @Builder(toBuilder = true)
 @EqualsAndHashCode
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class StatusInfoInternal {
 
-    private final String actual;
-    private final Instant statusChangeTimestamp;
-    private final boolean statusChanged;
+    private String actual;
+    private Instant statusChangeTimestamp;
+    private boolean statusChanged;
 }

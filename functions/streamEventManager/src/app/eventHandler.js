@@ -24,8 +24,8 @@ exports.handleEvent = async (event) => {
         return batchItemFailures;
       }
       let filteredItems = currentCdcEvents
-        .map(event => ({...unmarshall(event.dynamodb.NewImage), kinesisSeqNumber: event.kinesisSeqNumber}))
-        .filter((eventItem) => new Date(eventItem.timestamp) >= new Date(`${process.env.START_READ_STREAM_TIMESTAMP}`) && new Date(eventItem.timestamp) < new Date(`${process.env.STOP_READ_STREAM_TIMESTAMP}`))
+        .map(event => ({timelineObject : {...unmarshall(event.dynamodb.NewImage)}, kinesisSeqNumber: event.kinesisSeqNumber}))
+        .filter((eventItem) => new Date(eventItem.timelineObject.timestamp) >= new Date(`${process.env.START_READ_STREAM_TIMESTAMP}`) && new Date(eventItem.timelineObject.timestamp) < new Date(`${process.env.STOP_READ_STREAM_TIMESTAMP}`))
       try{
         let processedItems = mapEvents(filteredItems);
         if (processedItems.length > 0){
