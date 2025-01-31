@@ -343,6 +343,7 @@ Resources:
         ContainerEnvEntry13: !Sub 'PN_STREAM_TOPICS_EVENT=${EventQueueName}'
         ContainerEnvEntry14: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${EventQueueName},${ScheduledActionsQueueName}'
         ContainerEnvEntry15: !Sub 'PN_STREAM_DELIVERYBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry16: !Sub 'PN_STREAM_STREAMNOTIFICATIONTTL=${StreamNotificationTtl}'
         JavaToolOptions: '-Dreactor.netty.ioWorkerCount=50'
         MappedPaths: '/delivery-progresses-2/*'
         ECSClusterName: !Ref ECSClusterName
