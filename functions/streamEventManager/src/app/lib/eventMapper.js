@@ -1,4 +1,3 @@
-const { unmarshall } = require("@aws-sdk/util-dynamodb");
 const crypto = require('crypto');
 
 exports.mapEvents = (events) => {
@@ -6,7 +5,7 @@ exports.mapEvents = (events) => {
 
   for (let i = 0; i < events.length; i++) {
 
-    let timelineObj = unmarshall(events[i].dynamodb.NewImage);
+    let timelineObj = events[i];
 
     let date = new Date();
 
