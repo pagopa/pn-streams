@@ -51,7 +51,7 @@ public class StreamUtils {
 
         if (!ttl.isZero())
             eventEntity.setTtl(LocalDateTime.now().plus(ttl).atZone(ZoneId.systemDefault()).toEpochSecond());
-        eventEntity.setEventDescription(timestamp.toString() + "_" + timelineElementInternal.getElementId());
+        eventEntity.setEventDescription(timestamp.toString() + "_" + timelineElementInternal.getTimelineElementId());
 
         // Lo iun ci va solo se è stata accettata, quindi escludo gli stati invalidation e refused
         if (StringUtils.hasText(newStatus)

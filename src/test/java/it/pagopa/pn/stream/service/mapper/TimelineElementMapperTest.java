@@ -15,7 +15,7 @@ class TimelineElementMapperTest {
         TimelineElementInternal internalDto = buildTimelineElementInternal();
         TimelineElementV26 result = TimelineElementMapper.internalToExternal(internalDto);
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(internalDto.getElementId(), result.getElementId());
+        Assertions.assertEquals(internalDto.getTimelineElementId(), result.getElementId());
         Assertions.assertEquals(internalDto.getTimestamp(), result.getTimestamp());
     }
 
@@ -29,7 +29,7 @@ class TimelineElementMapperTest {
 
     private TimelineElementInternal buildTimelineElementInternal() {
         return TimelineElementInternal.builder()
-                .elementId("001")
+                .timelineElementId("001")
                 .timestamp(Instant.parse("2023-10-10T10:00:00Z"))
                 .details("{\"normalizedAddress\":{\"address\":\"VIA SENZA NOME\",\"addressDetails\":\"SCALA B\",\"at\":\"Presso\",\"foreignState\":\"ITALIA\",\"municipality\":\"COSENZA\",\"municipalityDetails\":\"COSENZA\",\"province\":\"CS\",\"zip\":\"87100\"},\"oldAddress\":{\"address\":\"Via senza nome\",\"addressDetails\":\"scala b\",\"at\":\"Presso\",\"foreignState\":\"ITALIA\",\"municipality\":\"Cosenza\",\"municipalityDetails\":\"Cosenza\",\"province\":\"CS\",\"zip\":\"87100\"},\"recIndex\":0}")
                 .build();
@@ -37,7 +37,7 @@ class TimelineElementMapperTest {
 
     private TimelineElementInternal buildInvalidTimelineElementInternal() {
         return TimelineElementInternal.builder()
-                .elementId("001")
+                .timelineElementId("001")
                 .timestamp(Instant.parse("2023-10-10T10:00:00Z"))
                 .details("{invalidJson}")
                 .build();

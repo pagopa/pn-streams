@@ -12,7 +12,7 @@ public class DtoToEntityWebhookTimelineMapper {
     public WebhookTimelineElementEntity dtoToEntity(TimelineElementInternal dto) {
         return WebhookTimelineElementEntity.builder()
                 .iun( dto.getIun() )
-                .timelineElementId( dto.getElementId() )
+                .timelineElementId( dto.getTimelineElementId() )
                 .paId( dto.getPaId() )
                 .category(dto.getCategory())
                 .details(dto.getDetails())

@@ -36,7 +36,7 @@ class ConfidentialInformationServiceImplTest {
     private TimelineElementInternal getSendPaperDetailsTimelineElement(String iun, String elementId) {
 
         return TimelineElementInternal.builder()
-                .elementId(elementId)
+                .timelineElementId(elementId)
                 .iun(iun)
                 .details( "{\"recIndex\":0,\"physicalAddress\":{\"zip\":\"87100\",\"foreignState\":\"ITALIA\"},\"nextSourceAttemptsMade\":0}" )
                 .build();

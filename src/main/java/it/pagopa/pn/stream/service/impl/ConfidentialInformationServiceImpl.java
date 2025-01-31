@@ -31,7 +31,7 @@ public class ConfidentialInformationServiceImpl implements ConfidentialInformati
     private ConfidentialTimelineElementId getConfidentialElementId(TimelineElementInternal internal) {
         return ConfidentialTimelineElementId.builder()
                 .iun(internal.getIun())
-                .timelineElementId(internal.getElementId())
+                .timelineElementId(internal.getTimelineElementId())
                 .build();
     }
 }

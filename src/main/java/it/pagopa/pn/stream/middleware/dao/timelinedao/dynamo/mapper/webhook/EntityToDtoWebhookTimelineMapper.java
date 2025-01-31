@@ -13,7 +13,7 @@ public class EntityToDtoWebhookTimelineMapper {
 
         return TimelineElementInternal.builder()
                 .iun(entity.getIun())
-                .elementId( entity.getTimelineElementId() )
+                .timelineElementId( entity.getTimelineElementId() )
                 .category( entity.getCategory() )
                 .details(entity.getDetails())
                 .legalFactsIds(  entity.getLegalFactIds() )

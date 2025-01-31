@@ -24,7 +24,7 @@ public class TimelineElementMapper {
         try {
             builder = TimelineElementV26.builder()
                     .category(internalDto.getCategory() != null ? TimelineElementCategoryV26.fromValue(internalDto.getCategory()) : null)
-                    .elementId(internalDto.getElementId())
+                    .elementId(internalDto.getTimelineElementId())
                     .timestamp(internalDto.getTimestamp())
                     .notificationSentAt(internalDto.getNotificationSentAt())
                     .ingestionTimestamp(internalDto.getIngestionTimestamp())
